@@ -1,6 +1,7 @@
 (ns pdt.pdf.text
   (:require
     [pdt.pdf.text.fonts :as fonts]
+    [pdt.templates :as templates]
     [clojure.data.xml :as xml]
     [clojure.zip :as zip]
     [clojure.string :as string])
@@ -113,7 +114,7 @@
                                           [new-length (conj current-line w) lines]
 
                                           (> word-length max-chars)
-                                          [new-length [(assoc w :contents "...")] (conj lines current-line)]   
+                                          [new-length [(assoc w :contents "...")] (conj lines current-line)]
 
                                           :default
                                           [word-length [w] (conj lines current-line)]
@@ -180,8 +181,8 @@
   (move-text-position-down c-stream (* font-size 1.5)))
 
 (defn- set-font
-  [c-stream font size style]
-  (let [font-obj (fonts/get-font font style)]
+  [c-stream font size style context]
+  (let [font-obj (fonts/get-font font style context)]
     (.. c-stream (setFont font-obj size))
     c-stream))
 
@@ -198,25 +199,25 @@
   c-stream)
 
 (defn- write-linepart
-  [c-stream linepart]
+  [c-stream linepart context]
   (let [{:keys [font size style color]} (:format linepart)]
     (-> c-stream
-        (set-font font size style)
+        (set-font font size style context)
         (set-color color)
         (draw-string (:contents linepart)))))
 
 (defn- write-line
-  [c-stream line]
+  [c-stream line context]
   (doseq [linepart line]
-    (write-linepart c-stream linepart))
+    (write-linepart c-stream linepart context))
   c-stream)
 
 (defn- write-paragraph
-  [c-stream formatting paragraph]
+  [c-stream formatting paragraph context]
   (doseq [line paragraph]
     (-> c-stream
         (move-text-position-down (get-in formatting [:spacing :before]))
-        (write-line (line-style->format line formatting))
+        (write-line (line-style->format line formatting) context)
         (move-text-position-down (get-in formatting [:spacing :after]))))
   c-stream)
 
@@ -231,7 +232,7 @@
      (get-in formatting [:spacing :before])))
 
 (defn- write-paragraphs
-  [c-stream formatting paragraphs]
+  [c-stream formatting paragraphs context]
   (let [[_ paragraphs-to-draw overflow] (reduce (fn [[size-left paragraphs overflow] paragraph]
                                                   (let [actual-formatting (merge (select-keys formatting [:width])
                                                                                  (get formatting (:elem paragraph)))
@@ -246,12 +247,13 @@
                                                 [(:height formatting) [] []]
                                                 paragraphs)]
     (doseq [[p-format paragraph] paragraphs-to-draw]
-      (write-paragraph c-stream p-format paragraph)))
+      (write-paragraph c-stream p-format paragraph context)))
   c-stream)
 
 (defn fill-text
   "c-stream: a PDPageContentStream object
   data: a map combining the area descriptions with the data
+  context: fonts, templates, etc.
 
   Example of area:
   {:height ..
@@ -265,27 +267,38 @@
             :size ...
             :color ...}
    :contents {:text \"XML string\"}}"
-  [c-stream data]
+  [c-stream data context]
   (let [formatting (merge (:format data)
                           (select-keys data [:width :height]))
         paragraphs (get-paragraph-nodes (get-in data [:contents :text]))]
     (-> c-stream
         (begin-text-block)
         (set-text-position (:x data) (:y data))
-        (write-paragraphs formatting paragraphs)
+        (write-paragraphs formatting paragraphs context)
         (end-text-block))))
 
 ;;; Missing
 ;; - Page breaking
 
 ;;; Test data (text)
+
 (def edn
   (read-string (slurp "template-b.edn")))
 
 (def text
   "<h1>Banebeskrivelse</h1><p>Ham aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<em><strong>hock</strong> ullamco</em> quis, t-bone biltong kielbasa sirloin prosciutto non <b>ribeye</b> andouille chuck mollit.</p><h2>Regler</h2><p>Sausage commodo ex cupidatat in pork loin. Ham leberkas sint pork chop bacon. <em><b>Chuck ea dolor</b></em>, salami sausage ad duis tongue officia nisi veniam pork belly cupidatat.</p><p>test number two</p><h3>Huskeliste</h3><ul><li>one time <b>ape</b> and duck</li><li>two times <em><b>ape</b></em> and duck</li></ul>")
 
-(def data (merge (first edn) {:contents {:text (str "<t>" text "</t>")}}))
+(def templates
+  (templates/add-template edn "template.pdf" {}))
+
+(def template (:template-b templates))
+
+(def context
+  (-> {}
+      (assoc :fonts fonts/base-fonts)
+      (assoc :templates templates)))
+
+(def data (merge (first (:holes template)) {:contents {:text (str "<t>" text "</t>")}}))
 
 (def ps (get-paragraph-nodes (str "<div>" text "</div>")))
 
@@ -304,9 +317,9 @@
 (.addPage out-doc page)
 (def c-stream (PDPageContentStream. out-doc page true false))
 
-;(fill-text c-stream data)
-;(.close c-stream)
-;(.save out-doc "test.pdf")
-;(.close out-doc)
-;(.close doc)
+(fill-text c-stream data context)
+(.close c-stream)
+(.save out-doc "test.pdf")
+(.close out-doc)
+(.close doc)
 
