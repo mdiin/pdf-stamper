@@ -282,6 +282,7 @@
 
 ;;; Test data (text)
 
+(comment 
 (def edn
   (read-string (slurp "template-b.edn")))
 
@@ -346,7 +347,7 @@
 (.close c-stream-2)
 
 (.save out-doc-2 "test2.pdf")
-(.close out-doc-2)
+(.close out-doc-2))
 
 ;(.close doc-1)
 ;(.close doc-2)

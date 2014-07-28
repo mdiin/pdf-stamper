@@ -12,16 +12,6 @@
 ;;; Living in IO land here, so tread carefully!
 ;;;
 
-(defn fill-pages
-  [pages context]
-  (let [output (java.io.ByteArrayOutputStream.)]
-    (with-open [document (PDDocument.)]
-      (let [open-documents (doall (map #(fill-page document % context) pages))]
-        (.save document output)
-        (doseq [doc open-documents]
-          (.close doc))))
-    output))
-
 (defn- fill-page
   "document: a PDDocument instance
   page-data: data for a single page
@@ -34,17 +24,29 @@
         template-holes (context/get-template-holes template context)
         template-doc (context/get-template-document template context)
         template-page (-> template-doc (.getDocumentCatalog) (.getAllPages) (.get 0))
-        template-c-stream (PDPageContentStream. document template-page true true)]
+        template-c-stream (PDPageContentStream. document template-page true false)]
+    (.addPage document template-page)
     (doseq [hole (sort-by :priority template-holes)]
       (condp = (:type hole)
         :image (images/fill-image document
                                   template-c-stream
-                                  (get-in page-data [:locations (:name hole)])
+                                  (merge hole (get-in page-data [:locations (:name hole)]))
                                   context)
         :text (text/fill-text template-c-stream
-                              (get-in page-data [:locations (:name hole)])
+                              (merge hole (get-in page-data [:locations (:name hole)]))
                               context)))
+    (.close template-c-stream)
     template-doc))
+
+(defn fill-pages
+  [pages context]
+  (let [output (java.io.ByteArrayOutputStream.)]
+    (with-open [document (PDDocument.)]
+      (let [open-documents (doall (map #(fill-page document % context) pages))]
+        (.save document output)
+        (doseq [doc open-documents]
+          (.close doc))))
+    output))
 
 
 ;;; Test data

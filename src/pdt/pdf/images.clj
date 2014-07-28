@@ -23,7 +23,8 @@
     c-stream))
 
 ;;; Test data (images)
-(def a-doc (PDDocument/load "template.pdf"))
+(comment
+  (def a-doc (PDDocument/load "template.pdf"))
 (def a-page
   (-> a-doc
       (.getDocumentCatalog)
@@ -35,5 +36,5 @@
 
 (def a-input-page
   {:kind :foo
-   :locations {:page/img {:location "sponsors/original/102_h9_ok.jpg"}}})
+   :locations {:page/img {:location "sponsors/original/102_h9_ok.jpg"}}}))
 
