@@ -11,7 +11,12 @@ Not much to see here yet. Library is still under active development.
 
 ### Template specifications
 
-Each template specification is for a one page document, describing "holes" on a PDF page. These holes contain a number of fields:
+Each template specification is for a one page document, describing "holes" on a PDF page. It contains two fields:
+
+- `:name` - the name of the template
+- `:holes` - the holes available in the template
+
+These holes contain a number of fields:
 
 - `:height` - in PDF points
 - `:width` - in PDF points
@@ -36,32 +41,33 @@ Each template specification is for a one page document, describing "holes" on a 
 
 The template format is [EDN](https://github.com/edn-format/edn).
 
-Example:
+Example of a single hole template:
 
 ```clojure
-{:height 10.0
- :width 10.0
- :x 1.09
- :y 3.12
- :name :head/hole-number
- :type :image
- :priority 10}
+{:name :single-hole-template
+ :holes [{:height 10.0
+          :width 10.0
+          :x 1.09
+          :y 3.12
+          :name :head/hole-number
+          :type :image
+          :priority 10}]}
 ```
+
+When adding a template to use there are two options: Adding it with a local file name, or adding it with a `java.io.URL` instance.
 
 ### Program input
 
-Input to the program consists of two fields:
+Input to the program consists of the fields:
 
-- `:style` - which template style to use for the pages
 - `:pages` - an ordered list of data for the pages
 
 Each entry in the `:pages` list is a map with the following keys:
 
-- `:location` - matches a `:name` in a template specification and is where this data will be inserted
-- `:kind` - which page template to use, e.g. `:hole_2_sponsors`
-- `:locations` - what to put on this page
+- `:template` - which page template to use, e.g. `:front-page`
+- `:locations` - what to put on this page, a map
 
-Keys in the `:locations` map match `:name` keys in the template specification; the values' contents depend on the `:type` of the hole in the template. For `:image`:
+Keys in the `:locations` map match `:name` keys in the template hole specifications; the values' contents depend on the `:type` of the hole in the template. For `:image`:
 
 - `:image` - a `java.awt.BufferedImage`
 

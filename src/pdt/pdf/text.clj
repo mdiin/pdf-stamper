@@ -6,7 +6,7 @@
     [clojure.zip :as zip]
     [clojure.string :as string])
   (:import
-    [org.apache.pdfbox.pdmodel PDDocument]
+    [org.apache.pdfbox.pdmodel PDDocument PDPage]
     [org.apache.pdfbox.pdmodel.font PDType1Font PDTrueTypeFont]
     [org.apache.pdfbox.pdmodel.edit PDPageContentStream]
     [org.apache.pdfbox.pdmodel.graphics.xobject PDXObjectImage PDPixelMap]))
@@ -306,20 +306,48 @@
   {:kind :foo
    :locations {:page/text {:text text}}})
 
-(def doc (PDDocument/load "template.pdf"))
-(def page
-  (-> doc
+(def doc-1 (PDDocument/load "template.pdf"))
+(def page-1
+  (-> doc-1
+      (.getDocumentCatalog)
+      (.getAllPages)
+      (.get 0)))
+
+(def doc-2 (PDDocument/load "template.pdf"))
+(def page-2
+  (-> doc-2
       (.getDocumentCatalog)
       (.getAllPages)
       (.get 0)))
 
 (def out-doc (PDDocument.))
-(.addPage out-doc page)
-(def c-stream (PDPageContentStream. out-doc page true false))
+(.addPage out-doc page-1)
+(def c-stream-1 (PDPageContentStream. out-doc page-1 true false))
+(fill-text c-stream-1 data context)
+(.close c-stream-1)
 
-(fill-text c-stream data context)
-(.close c-stream)
+(.addPage out-doc page-2)
+(def c-stream-2 (PDPageContentStream. out-doc page-2 true false))
+(fill-text c-stream-2 data context)
+(.close c-stream-2)
+
 (.save out-doc "test.pdf")
 (.close out-doc)
-(.close doc)
+
+(def out-doc-2 (PDDocument.))
+(.addPage out-doc-2 page-1)
+(def c-stream-1 (PDPageContentStream. out-doc-2 page-1 true false))
+(fill-text c-stream-1 data context)
+(.close c-stream-1)
+
+(.addPage out-doc-2 page-2)
+(def c-stream-2 (PDPageContentStream. out-doc-2 page-2 true false))
+(fill-text c-stream-2 data context)
+(.close c-stream-2)
+
+(.save out-doc-2 "test2.pdf")
+(.close out-doc-2)
+
+;(.close doc-1)
+;(.close doc-2)
 

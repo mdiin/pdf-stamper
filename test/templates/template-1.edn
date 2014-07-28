@@ -1,0 +1,16 @@
+{:name :template-1
+ :holes [{:name :one
+          :height 100.0
+          :width 100.0
+          :x 200.0
+          :y 400.0
+          :type :image
+          :priority 1}
+         
+         {:name :two
+          :height 300.0
+          :width 400.0
+          :x 200.0
+          :y 380.0
+          :type :text
+          :priority 2}]}

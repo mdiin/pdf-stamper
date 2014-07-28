@@ -1,12 +1,13 @@
 (ns pdt.pdf.images
   (:import
+    [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel.edit PDPageContentStream]
     [org.apache.pdfbox.pdmodel.graphics.xobject PDXObjectImage PDPixelMap]))
 
 (defn fill-image
   "c-stream: a PDPageContentStream object
-  doc: a PDDocument object
   data: a map combining the area descriptions with the data
+  context: fonts, templates, etc.
 
   Example of area:
   {:height ..
@@ -16,19 +17,10 @@
    :name ..
    :type :image
    :contents {:image java.awt.BufferedImage}}"
-  [c-stream doc data]
-  (let [image (get-in data [:contents :image])]
-    (println image)
-    (println data)
-
+  [document c-stream data context]
+  (let [image (PDPixelMap. document (get-in data [:contents :image]))]
     (.. c-stream (drawXObject image (:x data) (:y data) (:width data) (:height data)))
     c-stream))
-
-(defn fill-images
-  [c-stream doc ds]
-  (doseq [data ds]
-    (fill-image c-stream doc data))
-  c-stream)
 
 ;;; Test data (images)
 (def a-doc (PDDocument/load "template.pdf"))
