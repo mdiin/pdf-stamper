@@ -50,6 +50,10 @@
   [template context]
   (get-in context [:templates template :holes]))
 
+(defn get-template-overflow
+  [template context]
+  (get-in context [:templates template :overflow]))
+
 (defn add-font
   [doc in-stream font style context]
   (let [ttf (PDTrueTypeFont/loadTTF doc in-stream)]

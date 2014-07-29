@@ -64,7 +64,7 @@
 
 (extend-protocol IPDFRepresentable
   java.lang.String
-  (pdf-ready [s] {:style [:regular] :contents s})
+  (pdf-ready [s] {:style [:regular] :contents (string/trim s)})
 
   clojure.data.xml.Element
   (pdf-ready [e] (make-ready-elm e))
@@ -114,7 +114,7 @@
                                           [new-length (conj current-line w) lines]
 
                                           (> word-length max-chars)
-                                          [new-length [(assoc w :contents "...")] (conj lines current-line)]
+                                          [new-length [w] (conj lines current-line)]
 
                                           :default
                                           [word-length [w] (conj lines current-line)]
@@ -123,9 +123,15 @@
                                     (paragraph->words paragraph))]
     (collect-paragraph (conj lines last-line))))
 
+(defn- unbreak-paragraph
+  [elem-type lines]
+  {:elem elem-type
+   :content (mapcat collect-line (partition-by :style
+                                                (apply concat lines)))})
+
 (def ^:private paragraph-tags #{:h1 :h2 :h3 :p :ul :ol})
 
-(defn- get-paragraph-nodes
+(defn get-paragraph-nodes
   [xml-string]
   (elm->pars
     (filter #(some #{(:tag %)} paragraph-tags)
@@ -235,6 +241,7 @@
   [c-stream formatting paragraphs context]
   (let [[_ paragraphs-to-draw overflow] (reduce (fn [[size-left paragraphs overflow] paragraph]
                                                   (let [actual-formatting (merge (select-keys formatting [:width])
+                                                                                 (select-keys paragraph [:elem])
                                                                                  (get formatting (:elem paragraph)))
                                                         line-chars (line-length actual-formatting)
                                                         paragraph-lines (break-paragraph paragraph line-chars)
@@ -247,11 +254,20 @@
                                                 [(:height formatting) [] []]
                                                 paragraphs)]
     (doseq [[p-format paragraph] paragraphs-to-draw]
-      (write-paragraph c-stream p-format paragraph context)))
-  c-stream)
+      (write-paragraph c-stream p-format paragraph context))
+    [c-stream overflow]))
+
+(defn- handle-overflow
+  [overflow hole]
+  (when (seq overflow)
+    {hole {:contents {:text (map (fn
+                                   [[formatting paragraph]]
+                                   (unbreak-paragraph (:elem formatting) paragraph))
+                                 overflow)}}}))
 
 (defn fill-text
-  "c-stream: a PDPageContentStream object
+  "document: the PDDocument object that is the final product
+  c-stream: a PDPageContentStream object
   data: a map combining the area descriptions with the data
   context: fonts, templates, etc.
 
@@ -267,20 +283,26 @@
             :size ...
             :color ...}
    :contents {:text \"XML string\"}}"
-  [c-stream data context]
+  [document c-stream data context]
   (let [formatting (merge (:format data)
                           (select-keys data [:width :height]))
-        paragraphs (get-paragraph-nodes (get-in data [:contents :text]))]
+        paragraphs (get-in data [:contents :text])]
     (-> c-stream
         (begin-text-block)
         (set-text-position (:x data) (:y data))
         (write-paragraphs formatting paragraphs context)
-        (end-text-block))))
+        (#(do (end-text-block (first %)) (second %)))
+        (handle-overflow (:name data)))))
 
 ;;; Missing
-;; - Page breaking
+;; - Custom fonts
+;; - First line indent
+;; - Space before and after paragraph lines (as opposed to above and below paragraphs)
+;; - Text align
 
 ;;; Test data (text)
+(def ps (get-paragraph-nodes (str "<div>" text "</div>")))
+(def p (first (rest ps)))
 
 (comment 
 (def edn

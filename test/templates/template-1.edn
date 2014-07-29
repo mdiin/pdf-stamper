@@ -1,4 +1,5 @@
 {:name :template-1
+ :overflow :template-1
  :holes [{:name :one
           :height 100.0
           :width 100.0

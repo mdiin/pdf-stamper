@@ -19,8 +19,7 @@
    :contents {:image java.awt.BufferedImage}}"
   [document c-stream data context]
   (let [image (PDPixelMap. document (get-in data [:contents :image]))]
-    (.. c-stream (drawXObject image (:x data) (:y data) (:width data) (:height data)))
-    c-stream))
+    (.. c-stream (drawXObject image (:x data) (:y data) (:width data) (:height data)))))
 
 ;;; Test data (images)
 (comment

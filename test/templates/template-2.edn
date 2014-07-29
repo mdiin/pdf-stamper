@@ -1,8 +1,9 @@
 {:name :template-2
+ :overflow :template-2
  :holes [{:name :one
           :height 300.0
           :width 400.0
-          :x 400.0
+          :x 10.0
           :y 400.0
           :type :text
           :format {:paragraph {:font :times
