@@ -2,10 +2,10 @@
  :overflow :template-2
  :holes [{:name :one
           :height 300.0
-          :width 400.0
+          :width 200.0
           :x 10.0
           :y 400.0
-          :type :text
+          :type :text-parsed
           :format {:paragraph {:font :times
                                :style #{:regular}
                                :size 12
@@ -42,4 +42,20 @@
                             :color [0 0 0]
                             :spacing {:after 10
                                       :before 0}}}
-          :priority 1}]}
+          :priority 1}
+         
+         {:name :two
+          :height 28.8
+          :width 198.7
+          :x 49.7
+          :y 347.0
+          :type :text
+          :priority 2
+          :align {:horizontal :center
+                  :vertical :center}
+          :format {:font :times
+                   :style #{:bold :italic}
+                   :size 24
+                   :color [0 0 0]
+                   :spacing {:after 0
+                             :before 0}}}]}

@@ -1,6 +1,6 @@
 (ns pdt.pdf.text
   (:require
-    [pdt.pdf.text.fonts :as fonts]
+    [pdt.context :as context]
     [pdt.templates :as templates]
     [clojure.data.xml :as xml]
     [clojure.zip :as zip]
@@ -177,9 +177,19 @@
   (.. c-stream (setTextMatrix 1 0 0 1 x y))
   c-stream)
 
+(defn- move-text-position-up
+  [c-stream amount]
+  (.. c-stream (moveTextPositionByAmount 0 amount))
+  c-stream)
+
 (defn- move-text-position-down
   [c-stream amount]
   (.. c-stream (moveTextPositionByAmount 0 (- amount)))
+  c-stream)
+
+(defn- move-text-position-right
+  [c-stream amount]
+  (.. c-stream (moveTextPositionByAmount amount 0))
   c-stream)
 
 (defn- new-line-by-font-size
@@ -188,7 +198,7 @@
 
 (defn- set-font
   [c-stream font size style context]
-  (let [font-obj (fonts/get-font font style context)]
+  (let [font-obj (context/get-font font style context)]
     (.. c-stream (setFont font-obj size))
     c-stream))
 
@@ -204,6 +214,35 @@
   (.. c-stream (drawString string))
   c-stream)
 
+(defn- add-padding-horizontal
+  [c-stream line-length formatting]
+  (let [h-align (get-in formatting [:align :horizontal])]
+    (condp = h-align
+      :center (move-text-position-right c-stream (/ (- (:width formatting) line-length) 2))
+      :left c-stream
+      :right (move-text-position-right c-stream (- (:width formatting) line-length)))))
+
+(defn- add-padding-vertical
+  [c-stream line-height formatting]
+  (let [v-align (get-in formatting [:align :vertical])]
+    (condp = v-align
+      :center (move-text-position-up c-stream (/ (- (:height formatting) line-height) 2))
+      :top (move-text-position-up c-stream (- (:height formatting) line-height))
+      :bottom c-stream)))
+
+(defn- write-unparsed-line
+  [c-stream line context]
+  (let [{:keys [align width height font size style color] :as formatting} (:format line)
+        font (context/get-font font style context)
+        line-length (* size (/ (.. font (getStringWidth (:contents line))) 1000))
+        line-height size]
+    (-> c-stream
+        (add-padding-horizontal line-length formatting)
+        (add-padding-vertical line-height formatting)
+        (set-font font size style context)
+        (set-color color)
+        (draw-string (:contents line)))))
+
 (defn- write-linepart
   [c-stream linepart context]
   (let [{:keys [font size style color]} (:format linepart)]
@@ -214,7 +253,7 @@
 
 (defn- write-line
   [c-stream line context]
-  (doseq [linepart line]
+  (doseq [linepart (map #(update-in % [:contents] (fn [s] (str " " s))) line)]
     (write-linepart c-stream linepart context))
   c-stream)
 
@@ -229,13 +268,18 @@
 
 (defn- line-length
   [formatting]
-  (/ (:width formatting) (:size formatting)))
+  (let [{:keys [font style width size]} formatting
+        font (context/get-font font style context)]
+    (/ width (* (/ (.. font (getAverageFontWidth)) 1000) size))))
 
 (defn- line-height
   [formatting]
-  (+ (:size formatting)
-     (get-in formatting [:spacing :after])
-     (get-in formatting [:spacing :before])))
+  (let [{:keys [font style size]} formatting
+        font (context/get-font font style context)
+        font-height #spy/d (/ (.. font (getFontDescriptor) (getFontBoundingBox) (getHeight)) 1000)]
+    (+ (* font-height size)
+       (get-in formatting [:spacing :after])
+       (get-in formatting [:spacing :before]))))
 
 (defn- write-paragraphs
   [c-stream formatting paragraphs context]
@@ -265,7 +309,7 @@
                                    (unbreak-paragraph (:elem formatting) paragraph))
                                  overflow)}}}))
 
-(defn fill-text
+(defn fill-text-parsed
   "document: the PDDocument object that is the final product
   c-stream: a PDPageContentStream object
   data: a map combining the area descriptions with the data
@@ -282,7 +326,7 @@
             :style ...
             :size ...
             :color ...}
-   :contents {:text \"XML string\"}}"
+   :contents {:text a-seq-of-paragraphs}}"
   [document c-stream data context]
   (let [formatting (merge (:format data)
                           (select-keys data [:width :height]))
@@ -294,17 +338,32 @@
         (#(do (end-text-block (first %)) (second %)))
         (handle-overflow (:name data)))))
 
+(defn fill-text
+  "document: the PDDocument object that is the final product
+  c-stream: a PDPageContentStream object
+  data: a map combining the hole descriptions with the data
+  context: fonts, templates, etc."
+  [document c-stream data context]
+  (let [formatting (merge (:format data)
+                          (select-keys data [:align :width :height]))
+        text {:contents (get-in data [:contents :text])
+              :format formatting}]
+    (-> c-stream
+        (begin-text-block)
+        (set-text-position (:x data) (:y data))
+        (write-unparsed-line text context)
+        (end-text-block))
+    nil))
+
 ;;; Missing
 ;; - Custom fonts
-;; - First line indent
 ;; - Space before and after paragraph lines (as opposed to above and below paragraphs)
-;; - Text align
 
 ;;; Test data (text)
 (def ps (get-paragraph-nodes (str "<div>" text "</div>")))
 (def p (first (rest ps)))
 
-(comment 
+(comment
 (def edn
   (read-string (slurp "template-b.edn")))
 
@@ -318,7 +377,6 @@
 
 (def context
   (-> {}
-      (assoc :fonts fonts/base-fonts)
       (assoc :templates templates)))
 
 (def data (merge (first (:holes template)) {:contents {:text (str "<t>" text "</t>")}}))

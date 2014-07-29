@@ -32,13 +32,16 @@ Each template specification is for a one page document, describing "holes" on a 
   - `:head-1`
   - `:head-2`
   - `:head-3`
+- `:align` - a map with the keys `:horizontal` and `:vertical`
 - `:priority` - when in the drawing process to write this hole to the PDF
 
 `:x, :y` defines the top left corner of the hole on the PDF template page. `:height` and `:width` should be self-explanatory.
 
 `:priority` is effectively a layering of the contents on template pages; e.g. if you have two overlapping holes on a template the one with the lowest value in `:priority` will be drawn on the page first, and the other hole on top of that.
 
-`:format` is only necessary for `:parsed-text` holes. The keys `:font` and `:size` must be in points (`pt`), not pixels (`px`). `:color` must be an RGB vector, i.e. `[red green blue]`. `:spacing` is a map with the keys `:before` and `:after`, each of which is in points.
+`:format` is only necessary for `:text` (only the `:paragraph` key is necessary) and `:parsed-text` (all keys are necessary) holes. The keys `:font` and `:size` must be in points (`pt`), not pixels (`px`). `:color` must be an RGB vector, i.e. `[red green blue]`. `:spacing` is a map with the keys `:before` and `:after`, each of which is in points.
+
+`:align :horizontal` respects the values `:left`, `:right`, and `:center`; `:align :vertical` respects `:top`, `:bottom`, and `:center`. It is only used on `:text` holes, i.e. images and parsed text is not aligned according to these values.
 
 The template format is [EDN](https://github.com/edn-format/edn).
 
@@ -111,7 +114,12 @@ In the templates fonts are specified by a combination of their names (as a keywo
 
 # Future
 
+In no particular order:
+
 - Hyphenation support
+- Text align for parsed text (always left-aligned now)
+- Control indentation of first line for parsed text
+- Pluggable text parser, to support other formats than XML
 
 # Acknowledgments
 

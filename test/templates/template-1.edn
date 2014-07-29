@@ -13,7 +13,7 @@
           :width 400.0
           :x 200.0
           :y 380.0
-          :type :text
+          :type :text-parsed
           :format {:paragraph {:font :times
                                :style #{:regular}
                                :size 12

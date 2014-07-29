@@ -39,11 +39,18 @@
                                                              template-c-stream
                                                              data
                                                              context))
-                                 :text (let [data (update-in (merge hole
-                                                                    (get-in page-data
-                                                                            [:locations (:name hole)]))
-                                                             [:contents :text]
-                                                             #(if (string? %) (text/get-paragraph-nodes %) %))]
+                                 :text-parsed (let [data (update-in (merge hole
+                                                                           (get-in page-data
+                                                                                   [:locations (:name hole)]))
+                                                                    [:contents :text]
+                                                                    #(if (string? %) (text/get-paragraph-nodes %) %))]
+                                                (text/fill-text-parsed document
+                                                                       template-c-stream
+                                                                       data
+                                                                       context))
+                                 :text (let [data (merge hole
+                                                         (get-in page-data
+                                                                 [:locations (:name hole)]))]
                                          (text/fill-text document
                                                          template-c-stream
                                                          data
@@ -81,7 +88,7 @@
 
 (def context (->> context/base-context
                   (context/add-template template-1 template-pdf-1)
-                  (context/add-template template-2 template-pdf-2)))
+                  (context/add-template template-2 template-pdf-1)))
 
 (def pages
   [{:template :template-1
@@ -89,7 +96,8 @@
                 :two {:contents {:text text-1}}}}
 
    {:template :template-2
-    :locations {:one {:contents {:text text-1}}}}])
+    :locations {:one {:contents {:text text-1}}
+                :two {:contents {:text "Monkey balls!"}}}}])
 
 (def out (fill-pages pages context))
 
