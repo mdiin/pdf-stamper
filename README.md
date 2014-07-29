@@ -11,19 +11,20 @@ Not much to see here yet. Library is still under active development.
 
 ### Template specifications
 
-Each template specification is for a one page document, describing "holes" on a PDF page. It contains two fields:
+Each template specification is for a one page document, describing "holes" on a PDF page. It contains these fields:
 
 - `:name` - the name of the template
+- `:overflow` - the template to use when a `:text` hole on this template overflows
 - `:holes` - the holes available in the template
 
-These holes contain a number of fields:
+`:overflow` is optional, and if not present simply means that texts will get truncated. Holes contain a number of fields:
 
 - `:height` - in PDF points
 - `:width` - in PDF points
 - `:x` - in PDF points
 - `:y` - in PDF points
 - `:name` - the name of this hole on the page, e.g. `:head/hole-number`
-- `:type` - `:image` or `:text`
+- `:type` - `:image`, `:text`, or `:parsed-text`
 - `:format` - a map of maps containing the keys `:font`, `:style`, `:size`, `:color`, `:spacing`
   - `:paragraph`
   - `:bullet`
@@ -37,7 +38,7 @@ These holes contain a number of fields:
 
 `:priority` is effectively a layering of the contents on template pages; e.g. if you have two overlapping holes on a template the one with the lowest value in `:priority` will be drawn on the page first, and the other hole on top of that.
 
-`:format` is only necessary for text holes. The keys `:font` and `:size` must be in points (`pt`), not pixels (`px`). `:color` must be an RGB vector, i.e. `[red green blue]`. `:spacing` is a map with the keys `:before` and `:after`, each of which is in points.
+`:format` is only necessary for `:parsed-text` holes. The keys `:font` and `:size` must be in points (`pt`), not pixels (`px`). `:color` must be an RGB vector, i.e. `[red green blue]`. `:spacing` is a map with the keys `:before` and `:after`, each of which is in points.
 
 The template format is [EDN](https://github.com/edn-format/edn).
 
@@ -71,11 +72,11 @@ Keys in the `:locations` map match `:name` keys in the template hole specificati
 
 - `:image` - a `java.awt.BufferedImage`
 
-For `:text`:
+For `:text` and `:parsed-text`:
 
 - `:text` - the actual text to insert
 
-The text is XML/HTML. The string must consist of a top-level element containing the entire text. Only the following tags are handled with formatting:
+In `:text` holes the text is inserted as is, while in `:text-parsed` it is parsed as XML/HTML. The string must consist of a top-level element containing the entire text. Only the following tags are handled with formatting:
 
 - Paragraph level tags:
   - `h1-3` as headings
@@ -90,7 +91,7 @@ The text is XML/HTML. The string must consist of a top-level element containing 
 
 Paragraph level tags cannot be nested.
 
-If a word is longer than the by the template specified width, three dots (`...`) are written instead of that word.
+If a word is longer than the by the template specified width, the line will overflow the specified box.
 
 Input to the program is, like the template specifications, in [EDN](https://github.com/edn-format/edn).
 
