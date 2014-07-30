@@ -139,13 +139,13 @@
               (zip/xml-zip
                 (xml/parse-str xml-string))))))
 
-(def ^:private strong-format {:style :bold})
-(def ^:private em-format {:style :italic})
+(def ^:private strong-format {:style #{:bold}})
+(def ^:private em-format {:style #{:italic}})
 
 (defn- style->format
   [regular-format style-vec]
   (let [formatting (reduce (fn [format style]
-                             (merge-with #(conj %1 %2)
+                             (merge-with #((fnil into #{}) %1 %2)
                                          format
                                          (condp = style
                                            :regular regular-format

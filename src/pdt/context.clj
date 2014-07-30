@@ -4,7 +4,7 @@
     [clojure.string :as string])
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
-    [org.apache.pdfbox.pdmodel.font PDType1Font PDTrueTypeFont]))
+    [org.apache.pdfbox.pdmodel.font PDFont PDType1Font PDTrueTypeFont]))
 
 (def base-templates {})
 
@@ -55,15 +55,25 @@
   (get-in context [:templates template :overflow]))
 
 (defn add-font
-  [doc in-stream font style context]
-  (let [ttf (PDTrueTypeFont/loadTTF doc in-stream)]
-    (assoc-in context [:fonts (keyword font) style] ttf)))
+  "Add a font to the context. descriptor can be a java.io.InputStream or
+  a file name (string)"
+  [desc font style context]
+  (-> context
+      (assoc-in [:fonts (keyword font) style :desc] desc)
+      (update-in [:fonts-to-embed] #((fnil conj []) % [(keyword font) style]))))
 
 (defn get-font
   [font-name style context]
+  {:post [(instance? PDFont %)]}
   (get-in context [:fonts font-name style]
           (get-in context [:fonts :times style]
                   (get-in context [:fonts :times #{:regular}]))))
+
+(defn embed-font
+  [doc font style context]
+  (if-let [font-desc (get-in context [:fonts font style :desc])]
+    (assoc-in context [:fonts font style] #spy/d (PDTrueTypeFont/loadTTF doc font-desc))
+    context))
 
 (defn get-average-font-width
   [font-name style size context]

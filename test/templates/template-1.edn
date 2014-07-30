@@ -14,7 +14,7 @@
           :x 200.0
           :y 380.0
           :type :text-parsed
-          :format {:paragraph {:font :times
+          :format {:paragraph {:font :open-sans
                                :style #{:regular}
                                :size 12
                                :color [0 0 0]
