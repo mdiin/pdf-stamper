@@ -233,9 +233,8 @@
 (defn- write-unparsed-line
   [c-stream line context]
   (let [{:keys [align width height font size style color] :as formatting} (:format line)
-        font (context/get-font font style context)
-        line-length (* size (/ (.. font (getStringWidth (:contents line))) 1000))
-        line-height size]
+        line-length (context/get-font-string-width font style size (:contents line) context)
+        line-height (context/get-font-height font style size context)]
     (-> c-stream
         (add-padding-horizontal line-length formatting)
         (add-padding-vertical line-height formatting)
@@ -267,17 +266,16 @@
   c-stream)
 
 (defn- line-length
-  [formatting]
+  [formatting context]
   (let [{:keys [font style width size]} formatting
-        font (context/get-font font style context)]
-    (/ width (* (/ (.. font (getAverageFontWidth)) 1000) size))))
+        font-width (context/get-average-font-width font style size context)]
+    (/ width font-width)))
 
 (defn- line-height
-  [formatting]
+  [formatting context]
   (let [{:keys [font style size]} formatting
-        font (context/get-font font style context)
-        font-height #spy/d (/ (.. font (getFontDescriptor) (getFontBoundingBox) (getHeight)) 1000)]
-    (+ (* font-height size)
+        font-height (context/get-font-height font style size context)]
+    (+ font-height
        (get-in formatting [:spacing :after])
        (get-in formatting [:spacing :before]))))
 
@@ -287,9 +285,9 @@
                                                   (let [actual-formatting (merge (select-keys formatting [:width])
                                                                                  (select-keys paragraph [:elem])
                                                                                  (get formatting (:elem paragraph)))
-                                                        line-chars (line-length actual-formatting)
+                                                        line-chars (line-length actual-formatting context)
                                                         paragraph-lines (break-paragraph paragraph line-chars)
-                                                        paragraph-line-height (line-height actual-formatting)
+                                                        paragraph-line-height (line-height actual-formatting context)
                                                         number-of-lines (/ size-left paragraph-line-height)
                                                         [p o] (split-at number-of-lines paragraph-lines)]
                                                     (if (seq o)
@@ -357,7 +355,10 @@
 
 ;;; Missing
 ;; - Custom fonts
+;; - Bullet lists
+;; - Numbered lists
 ;; - Space before and after paragraph lines (as opposed to above and below paragraphs)
+;; - Partially nested character-level tags, e.g. <em><strong>foo</strong> bar</em>
 
 ;;; Test data (text)
 (def ps (get-paragraph-nodes (str "<div>" text "</div>")))

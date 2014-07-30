@@ -32,7 +32,7 @@
   "template-def: The definition, a map as described in the README.
   template-uri: locator for the PDF used by the template, URL or string.
   context: fonts, templates, etc.
-  
+
   Add template to the context; does not open the associated URI."
   [template-def template-uri context]
   (if template-def
@@ -64,4 +64,19 @@
   (get-in context [:fonts font-name style]
           (get-in context [:fonts :times style]
                   (get-in context [:fonts :times #{:regular}]))))
+
+(defn get-average-font-width
+  [font-name style size context]
+  (let [font (get-font font-name style context)]
+    (* (/ (.. font (getAverageFontWidth)) 1000) size)))
+
+(defn get-font-height
+  [font-name style size context]
+  (let [font (get-font font-name style context)]
+    (* (/ (.. font (getFontDescriptor) (getFontBoundingBox) (getHeight)) 1000) size)))
+
+(defn get-font-string-width
+  [font-name style size string context]
+  (let [font (get-font font-name style context)]
+    (* (/ (.. font (getStringWidth string)) 1000) size)))
 
