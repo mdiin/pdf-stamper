@@ -192,6 +192,11 @@
   (.. c-stream (moveTextPositionByAmount amount 0))
   c-stream)
 
+(defn- move-text-position-left
+  [c-stream amount]
+  (.. c-stream (moveTextPositionByAmount (- amount) 0))
+  c-stream)
+
 (defn- new-line-by-font-size
   [c-stream font-size]
   (move-text-position-down c-stream (* font-size 1.5)))
@@ -258,26 +263,30 @@
 
 (defn- write-paragraph
   [c-stream formatting paragraph context]
+  (move-text-position-right c-stream (get-in formatting [:indent :all]))
   (doseq [line paragraph]
     (-> c-stream
-        (move-text-position-down (get-in formatting [:spacing :before]))
+        (move-text-position-down (get-in formatting [:spacing :above]))
         (write-line (line-style->format line formatting) context)
-        (move-text-position-down (get-in formatting [:spacing :after]))))
+        (move-text-position-down (get-in formatting [:spacing :below]))))
+  (move-text-position-left c-stream (get-in formatting [:indent :all]))
   c-stream)
 
 (defn- line-length
   [formatting context]
   (let [{:keys [font style width size]} formatting
-        font-width (context/get-average-font-width font style size context)]
-    (/ width font-width)))
+        font-width (context/get-average-font-width font style size context)
+        indent-width (get-in formatting [:indent :all])]
+    (- (/ width font-width)
+       (/ indent-width font-width))))
 
 (defn- line-height
   [formatting context]
   (let [{:keys [font style size]} formatting
         font-height (context/get-font-height font style size context)]
     (+ font-height
-       (get-in formatting [:spacing :after])
-       (get-in formatting [:spacing :before]))))
+       (get-in formatting [:spacing :below])
+       (get-in formatting [:spacing :above]))))
 
 (defn- write-paragraphs
   [c-stream formatting paragraphs context]
@@ -354,10 +363,9 @@
     nil))
 
 ;;; Missing
-;; - Custom fonts
 ;; - Bullet lists
 ;; - Numbered lists
-;; - Space before and after paragraph lines (as opposed to above and below paragraphs)
+;; - Space after paragraph lines (as opposed to below paragraphs)
 ;; - Partially nested character-level tags, e.g. <em><strong>foo</strong> bar</em>
 
 ;;; Test data (text)
