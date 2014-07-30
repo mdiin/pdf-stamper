@@ -108,17 +108,11 @@
                                             [current-length current-line lines] acc
                                             word-length (inc (count contents)) ;; inc is for the missing space at the end of each word
                                             new-length (+ current-length word-length)]
-                                        (cond
-                                          (and (> current-length 0)
-                                               (<= new-length max-chars))
+                                        (if (<= new-length max-chars)
                                           [new-length (conj current-line w) lines]
-
-                                          (> word-length max-chars)
-                                          [new-length [w] (conj lines current-line)]
-
-                                          :default
-                                          [word-length [w] (conj lines current-line)]
-                                          )))
+                                          [word-length [w] (if (seq current-line)
+                                                             (conj lines current-line)
+                                                             lines)])))
                                     [0 [] []]
                                     (paragraph->words paragraph))]
     (collect-paragraph (conj lines last-line))))
@@ -197,9 +191,10 @@
   (.. c-stream (moveTextPositionByAmount (- amount) 0))
   c-stream)
 
-(defn- new-line-by-font-size
-  [c-stream font-size]
-  (move-text-position-down c-stream (* font-size 1.5)))
+(defn- new-line-by-font
+  [c-stream font size style context]
+  (let [font-height (context/get-font-height font style size context)]
+    (move-text-position-down c-stream font-height)))
 
 (defn- set-font
   [c-stream font size style context]
@@ -261,16 +256,56 @@
     (write-linepart c-stream linepart context))
   c-stream)
 
+(defn- write-default-paragraph
+  [c-stream formatting paragraph context]
+  (let [{:keys [font size style]} formatting]
+    (doseq [line paragraph]
+      (-> c-stream
+          (move-text-position-down (get-in formatting [:spacing :line :above]))
+          (write-line (line-style->format line formatting) context)
+          (new-line-by-font font size style context)
+          (move-text-position-down (get-in formatting [:spacing :line :below]))))))
+
+(defn- write-bullet-paragraph
+  [c-stream formatting paragraph context]
+  (let [{:keys [font style size color bullet-char]} formatting
+        bullet (str bullet-char)
+        bullet-length (context/get-font-string-width font style size bullet context)]
+    (-> c-stream
+        (set-font font size style context)
+        (set-color color)
+        (move-text-position-down (get-in formatting [:spacing :line :above]))
+        (move-text-position-left (* bullet-length 2))
+        (draw-string bullet)
+        (move-text-position-right (* bullet-length 2))
+        (write-line (line-style->format (first paragraph) formatting) context)
+        (new-line-by-font font size style context))
+    (doseq [line (rest paragraph)]
+      (-> c-stream
+          (move-text-position-down (get-in formatting [:spacing :line :above]))
+          (write-line (line-style->format line formatting) context)
+          (new-line-by-font font size style context) 
+          (move-text-position-down (get-in formatting [:spacing :line :below]))))
+    c-stream))
+
+(defn- write-paragraph-internal
+  [c-stream formatting paragraph context]
+  (let [paragraph-type (:elem formatting)]
+    (cond
+      (= paragraph-type :paragraph) (write-default-paragraph c-stream formatting paragraph context)
+      (= paragraph-type :bullet) (write-bullet-paragraph c-stream formatting paragraph context)
+      (= paragraph-type :number) (write-bullet-paragraph c-stream formatting paragraph context)
+      :default (write-default-paragraph c-stream formatting paragraph context))
+    c-stream))
+
 (defn- write-paragraph
   [c-stream formatting paragraph context]
-  (move-text-position-right c-stream (get-in formatting [:indent :all]))
-  (doseq [line paragraph]
-    (-> c-stream
-        (move-text-position-down (get-in formatting [:spacing :above]))
-        (write-line (line-style->format line formatting) context)
-        (move-text-position-down (get-in formatting [:spacing :below]))))
-  (move-text-position-left c-stream (get-in formatting [:indent :all]))
-  c-stream)
+  (-> c-stream
+      (move-text-position-right (get-in formatting [:indent :all]))
+      (move-text-position-down (get-in formatting [:spacing :paragraph :above]))
+      (write-paragraph-internal formatting paragraph context)
+      (move-text-position-down (get-in formatting [:spacing :paragraph :below]))
+      (move-text-position-left (get-in formatting [:indent :all]))))
 
 (defn- line-length
   [formatting context]
@@ -285,8 +320,8 @@
   (let [{:keys [font style size]} formatting
         font-height (context/get-font-height font style size context)]
     (+ font-height
-       (get-in formatting [:spacing :below])
-       (get-in formatting [:spacing :above]))))
+       (get-in formatting [:spacing :line :below])
+       (get-in formatting [:spacing :line :above]))))
 
 (defn- write-paragraphs
   [c-stream formatting paragraphs context]
@@ -300,7 +335,7 @@
                                                         number-of-lines (/ size-left paragraph-line-height)
                                                         [p o] (split-at number-of-lines paragraph-lines)]
                                                     (if (seq o)
-                                                      [0 (conj paragraphs [actual-formatting p]) (conj overflow [actual-formatting o])]
+                                                      [0 (if (seq p) (conj paragraphs [actual-formatting p]) paragraphs) (conj overflow [actual-formatting o])]
                                                       [(- size-left (* paragraph-line-height (count p))) (conj paragraphs [actual-formatting p]) overflow])))
                                                 [(:height formatting) [] []]
                                                 paragraphs)]
@@ -363,7 +398,6 @@
     nil))
 
 ;;; Missing
-;; - Bullet lists
 ;; - Numbered lists
 ;; - Space after paragraph lines (as opposed to below paragraphs)
 ;; - Partially nested character-level tags, e.g. <em><strong>foo</strong> bar</em>

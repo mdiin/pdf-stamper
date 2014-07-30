@@ -25,7 +25,7 @@ Each template specification is for a one page document, describing "holes" on a 
 - `:y` - in PDF points
 - `:name` - the name of this hole on the page, e.g. `:head/hole-number`
 - `:type` - `:image`, `:text`, or `:parsed-text`
-- `:format` - a map of maps containing the keys `:font`, `:style`, `:size`, `:color`, `:spacing`, `:indent`
+- `:format` - a map of maps containing the keys `:font`, `:style`, `:size`, `:color`, `:spacing`, `:indent`, `:spacing`
   - `:paragraph`
   - `:bullet`
   - `:number`
@@ -39,7 +39,9 @@ Each template specification is for a one page document, describing "holes" on a 
 
 `:priority` is effectively a layering of the contents on template pages; e.g. if you have two overlapping holes on a template the one with the lowest value in `:priority` will be drawn on the page first, and the other hole on top of that.
 
-`:format` is only necessary for `:text` (only the `:paragraph` key is necessary) and `:parsed-text` (all keys are necessary) holes. The keys `:font` and `:size` must be in points (`pt`), not pixels (`px`). `:color` must be an RGB vector, i.e. `[red green blue]`. `:spacing` is a map with the keys `:above` and `:below`, each of which is in points. `:indent` is a map with the keys `:all`, each of which is in points.
+`:format` is only necessary for `:text` (only the `:paragraph` key is necessary) and `:parsed-text` (all keys are necessary) holes. The keys `:font` and `:size` must be in points (`pt`), not pixels (`px`). `:color` must be an RGB vector, i.e. `[red green blue]`. `:spacing` is a map with the keys `:paragraph` and `:line`, each with the keys `:above` and `:below`. `:indent` is a map with the keys `:all`, each of which is in points.
+
+`:bullet` paragraphs must contain the key `:bullet-char`, a string to use as the bullet in bullet lists.
 
 `:align :horizontal` respects the values `:left`, `:right`, and `:center`; `:align :vertical` respects `:top`, `:bottom`, and `:center`. It is only used on `:text` holes, i.e. images and parsed text is not aligned according to these values.
 

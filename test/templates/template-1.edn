@@ -7,11 +7,11 @@
           :y 400.0
           :type :image
           :priority 1}
-         
+
          {:name :two
           :height 300.0
-          :width 400.0
-          :x 200.0
+          :width 300.0
+          :x 30.0
           :y 380.0
           :type :text-parsed
           :format {:paragraph {:font :open-sans
@@ -19,41 +19,54 @@
                                :size 12
                                :color [0 0 0]
                                :indent {:all 0}
-                               :spacing {:below 10
-                                         :above 0}}
+                               :spacing {:paragraph {:below 0
+                                                     :above 0}
+                                         :line {:below 0
+                                                :above 0}}}
                    :head-1 {:font :helvetica
                             :style #{:bold}
                             :size 24
                             :color [0 0 0]
                             :indent {:all 0}
-                            :spacing {:below 10
-                                      :above 0}}
+                            :spacing {:paragraph {:below 0
+                                                  :above 0}
+                                      :line {:below 0
+                                             :above 0}}}
                    :head-2 {:font :helvetica
                             :style #{:italic}
                             :size 18
                             :color [10 10 10]
                             :indent {:all 0}
-                            :spacing {:below 10
-                                      :above 0}}
+                            :spacing {:paragraph {:below 0
+                                                  :above 0}
+                                      :line {:below 0
+                                             :above 0}}}
                    :head-3 {:font :helvetica
                             :style #{:regular}
                             :size 16
                             :color [20 20 20]
                             :indent {:all 0}
-                            :spacing {:below 10
-                                      :above 0}}
-                   :bullet {:font :times
+                            :spacing {:paragraph {:below 0
+                                                  :above 0}
+                                      :line {:below 0
+                                             :above 0}}}
+                   :bullet {:font :open-sans
                             :style #{:regular}
                             :size 12
                             :color [0 0 0]
+                            :bullet-char "-"
                             :indent {:all 0}
-                            :spacing {:below 10
-                                      :above 0}}
+                            :spacing {:paragraph {:below 0
+                                                  :above 0}
+                                      :line {:below 0
+                                             :above 0}}}
                    :number {:font :times
                             :style #{:regular}
                             :size 12
                             :color [0 0 0]
                             :indent {:all 0}
-                            :spacing {:below 10
-                                      :above 0}}}
+                            :spacing {:paragraph {:below 0
+                                                  :above 0}
+                                      :line {:below 0
+                                             :above 0}}}}
           :priority 2}]}

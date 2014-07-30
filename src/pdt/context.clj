@@ -72,7 +72,7 @@
 (defn embed-font
   [doc font style context]
   (if-let [font-desc (get-in context [:fonts font style :desc])]
-    (assoc-in context [:fonts font style] #spy/d (PDTrueTypeFont/loadTTF doc font-desc))
+    (assoc-in context [:fonts font style] (PDTrueTypeFont/loadTTF doc font-desc))
     context))
 
 (defn get-average-font-width
