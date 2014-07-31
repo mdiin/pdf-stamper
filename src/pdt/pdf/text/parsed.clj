@@ -199,4 +199,8 @@
                                    (unbreak-paragraph (:elem formatting) paragraph))
                                  overflow)}}}))
 
+;;; Missing
+;; - Numbered lists
+;; - Space after paragraph lines (as opposed to below paragraphs)
+;; - Partially nested character-level tags, e.g. <em><strong>foo</strong> bar</em>
 
