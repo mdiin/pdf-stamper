@@ -262,7 +262,7 @@
     (doseq [line paragraph]
       (-> c-stream
           (move-text-position-down (get-in formatting [:spacing :line :above]))
-          (write-line (line-style->format line formatting) context)
+          (write-line line context)
           (new-line-by-font font size style context)
           (move-text-position-down (get-in formatting [:spacing :line :below]))))))
 
@@ -278,12 +278,12 @@
         (move-text-position-left (* bullet-length 2))
         (draw-string bullet)
         (move-text-position-right (* bullet-length 2))
-        (write-line (line-style->format (first paragraph) formatting) context)
+        (write-line (first paragraph) context)
         (new-line-by-font font size style context))
     (doseq [line (rest paragraph)]
       (-> c-stream
           (move-text-position-down (get-in formatting [:spacing :line :above]))
-          (write-line (line-style->format line formatting) context)
+          (write-line line context)
           (new-line-by-font font size style context) 
           (move-text-position-down (get-in formatting [:spacing :line :below]))))
     c-stream))
@@ -323,25 +323,36 @@
        (get-in formatting [:spacing :line :below])
        (get-in formatting [:spacing :line :above]))))
 
+(defn- paragraphs-overflowing
+  [paragraphs formatting context]
+  (rest 
+    (reduce (fn [[size-left paragraphs overflow] paragraph]
+              (let [actual-formatting (merge (select-keys formatting [:width])
+                                             (select-keys paragraph [:elem])
+                                             (get formatting (:elem paragraph)))
+                    line-chars (line-length actual-formatting context)
+                    paragraph-lines (break-paragraph paragraph line-chars)
+                    paragraph-line-height (line-height actual-formatting context)
+                    number-of-lines (/ size-left paragraph-line-height)
+                    [p o] (split-at number-of-lines paragraph-lines)
+                    paragraph (map #(line-style->format % actual-formatting) p)]
+                (if (seq o)
+                  [0
+                   (if (seq paragraph)
+                     (conj paragraphs [actual-formatting paragraph])
+                     paragraphs)
+                   (conj overflow [actual-formatting o])]
+                  [(- size-left (* paragraph-line-height (count paragraph)))
+                   (conj paragraphs [actual-formatting paragraph])
+                   overflow])))
+            [(:height formatting) [] []]
+            paragraphs)))
+
 (defn- write-paragraphs
   [c-stream formatting paragraphs context]
-  (let [[_ paragraphs-to-draw overflow] (reduce (fn [[size-left paragraphs overflow] paragraph]
-                                                  (let [actual-formatting (merge (select-keys formatting [:width])
-                                                                                 (select-keys paragraph [:elem])
-                                                                                 (get formatting (:elem paragraph)))
-                                                        line-chars (line-length actual-formatting context)
-                                                        paragraph-lines (break-paragraph paragraph line-chars)
-                                                        paragraph-line-height (line-height actual-formatting context)
-                                                        number-of-lines (/ size-left paragraph-line-height)
-                                                        [p o] (split-at number-of-lines paragraph-lines)]
-                                                    (if (seq o)
-                                                      [0 (if (seq p) (conj paragraphs [actual-formatting p]) paragraphs) (conj overflow [actual-formatting o])]
-                                                      [(- size-left (* paragraph-line-height (count p))) (conj paragraphs [actual-formatting p]) overflow])))
-                                                [(:height formatting) [] []]
-                                                paragraphs)]
-    (doseq [[p-format paragraph] paragraphs-to-draw]
-      (write-paragraph c-stream p-format paragraph context))
-    [c-stream overflow]))
+  (doseq [[p-format paragraph] paragraphs]
+    (write-paragraph c-stream p-format paragraph context))
+  c-stream)
 
 (defn- handle-overflow
   [overflow hole]
@@ -372,13 +383,16 @@
   [document c-stream data context]
   (let [formatting (merge (:format data)
                           (select-keys data [:width :height]))
-        paragraphs (get-in data [:contents :text])]
+        [paragraphs overflow] (paragraphs-overflowing
+                                (get-in data [:contents :text])
+                                formatting
+                                context)]
     (-> c-stream
         (begin-text-block)
         (set-text-position (:x data) (:y data))
         (write-paragraphs formatting paragraphs context)
-        (#(do (end-text-block (first %)) (second %)))
-        (handle-overflow (:name data)))))
+        (end-text-block))
+    (handle-overflow overflow (:name data))))
 
 (defn fill-text
   "document: the PDDocument object that is the final product
