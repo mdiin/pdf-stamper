@@ -123,6 +123,7 @@ In the templates fonts are specified by a combination of their names (as a keywo
 First:
 
 - Tests!
+- Better documentation
 
 After that, in no particular order:
 
