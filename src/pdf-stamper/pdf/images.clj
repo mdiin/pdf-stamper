@@ -1,4 +1,4 @@
-(ns pdt.pdf.images
+(ns pdf-stamper.pdf.images
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel.edit PDPageContentStream]

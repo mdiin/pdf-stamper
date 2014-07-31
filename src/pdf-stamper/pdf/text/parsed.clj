@@ -1,6 +1,6 @@
-(ns pdt.pdf.text.parsed
+(ns pdf-stamper.pdf.text.parsed
   (:require
-    [pdt.context :as context]
+    [pdf-stamper.context :as context]
     [clojure.string :as string]
     [clojure.zip :as zip]
     [clojure.data.xml :as xml]))

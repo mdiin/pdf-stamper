@@ -1,4 +1,4 @@
-(ns pdt.context
+(ns pdf-stamper.context
   (:require
     [clojure.edn :as edn]
     [clojure.string :as string])

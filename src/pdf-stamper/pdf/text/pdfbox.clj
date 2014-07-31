@@ -1,6 +1,6 @@
-(ns pdt.pdf.text.pdfbox
+(ns pdf-stamper.pdf.text.pdfbox
   (:require
-    [pdt.context :as context]))
+    [pdf-stamper.context :as context]))
 
 ;;;
 ;;; Living in IO land here, so tread carefully!

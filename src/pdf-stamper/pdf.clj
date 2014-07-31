@@ -1,9 +1,9 @@
-(ns pdt.pdf
+(ns pdf-stamper.pdf
   (:require
-    [pdt.context :as context]
-    [pdt.pdf.images :as images]
-    [pdt.pdf.text :as text]
-    [pdt.pdf.text.parsed :as parsed-text])
+    [pdf-stamper.context :as context]
+    [pdf-stamper.pdf.images :as images]
+    [pdf-stamper.pdf.text :as text]
+    [pdf-stamper.pdf.text.parsed :as parsed-text])
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel.edit PDPageContentStream]))
