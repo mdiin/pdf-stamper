@@ -116,7 +116,11 @@ In the templates fonts are specified by a combination of their names (as a keywo
 
 # Future
 
-In no particular order:
+First:
+
+- Tests!
+
+After that, in no particular order:
 
 - Hyphenation support
 - Text align for parsed text (always left-aligned now)

@@ -8,14 +8,16 @@
     [org.apache.pdfbox.pdmodel.edit PDPageContentStream]
     [org.apache.pdfbox.pdmodel.graphics.xobject PDXObjectImage PDPixelMap]))
 
-(def template-1 (edn/read-string (slurp "test/templates/template-1.edn")))
-(def template-2 (edn/read-string (slurp "test/templates/template-2.edn")))
-(def template-pdf-1 "test/templates/template-1.pdf")
-(def template-pdf-2 "test/templates/template-2.pdf")
+(def template-1 (edn/read-string (slurp "test/templates/large/template-1.edn")))
+(def template-2 (edn/read-string (slurp "test/templates/large/template-2.edn")))
+(def template-pdf-1 "test/templates/large/template-1.pdf")
+(def template-pdf-2 "test/templates/large/template-2.pdf")
 
-(def font-1 "test/templates/OpenSans-Regular.ttf")
+(def font-1 "test/templates/large/OpenSans-Regular.ttf")
+(def font-2 "test/templates/large/OpenSans-Bold.ttf")
+(def font-3 "test/templates/large/OpenSans-Semibold.ttf")
 
-(def image-1 (javax.imageio.ImageIO/read (clojure.java.io/as-file "test/templates/image-1.jpg")))
+(def image-1 (javax.imageio.ImageIO/read (clojure.java.io/as-file "test/templates/large/image-1.jpg")))
 (def text-1
   "<pp><h1>Banebeskrivelse</h1><p>Ham aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<em><strong>hock</strong> ullamco</em> quis, t-bone biltong kielbasa sirloin prosciutto non <b>ribeye</b> andouille chuck mollit.</p><h2>Regler</h2><p>Sausage commodo ex cupidatat in pork loin. Ham leberkas sint pork chop bacon. <em><b>Chuck ea dolor</b></em>, salami sausage ad duis tongue officia nisi veniam pork belly cupidatat.</p><p>test number two</p><h3>Huskeliste</h3><ul><li>one time <b>ape</b> and duck</li><li>two times <em><b>ape</b></em> and duck</li><li>abekat er en led hest, med mange gode grise i stalden. Test</li></ul></pp>")
 
@@ -24,6 +26,8 @@
 
 (def context (->> context/base-context
                   (context/add-font font-1 :open-sans #{:regular})
+                  (context/add-font font-2 :open-sans #{:bold})
+                  (context/add-font font-3 :open-sans #{:semi-bold})
                   (context/add-template template-1 template-pdf-1)
                   (context/add-template template-2 template-pdf-1)))
 
