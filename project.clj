@@ -5,5 +5,5 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/data.xml "0.0.7"] ;; XML parsing
-                 [org.apache.pdfbox/pdfbox "1.8.5"] ;; PDF
+                 [org.apache.pdfbox/pdfbox "1.8.6"] ;; PDF
                  ])
