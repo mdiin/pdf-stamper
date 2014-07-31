@@ -3,7 +3,8 @@
     [clojure.edn :as edn]
     [pdt.context :as context]
     [pdt.pdf.images :as images]
-    [pdt.pdf.text :as text])
+    [pdt.pdf.text :as text]
+    [pdt.pdf.text.parsed :as parsed-text])
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel.edit PDPageContentStream]
@@ -43,7 +44,7 @@
                                                                            (get-in page-data
                                                                                    [:locations (:name hole)]))
                                                                     [:contents :text]
-                                                                    #(if (string? %) (text/get-paragraph-nodes %) %))]
+                                                                    #(if (string? %) (parsed-text/get-paragraph-nodes %) %))]
                                                 (text/fill-text-parsed document
                                                                        template-c-stream
                                                                        data
