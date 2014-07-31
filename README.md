@@ -121,6 +121,7 @@ In no particular order:
 - Hyphenation support
 - Text align for parsed text (always left-aligned now)
 - Control indentation of first line for parsed text
+- Add space after every line of paragraph
 - Pluggable text parser, to support other formats than XML
 
 # Acknowledgments

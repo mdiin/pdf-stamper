@@ -119,14 +119,6 @@
 
 (def ^:private paragraph-tags #{:h1 :h2 :h3 :p :ul :ol})
 
-(defn get-paragraph-nodes
-  [xml-string]
-  (elm->pars
-    (filter #(some #{(:tag %)} paragraph-tags)
-            (zip/children
-              (zip/xml-zip
-                (xml/parse-str xml-string))))))
-
 (def ^:private strong-format {:style #{:bold}})
 (def ^:private em-format {:style #{:italic}})
 
@@ -166,6 +158,14 @@
        (get-in formatting [:spacing :line :below])
        (get-in formatting [:spacing :line :above]))))
 
+(defn get-paragraph-nodes
+  [xml-string]
+  (elm->pars
+    (filter #(some #{(:tag %)} paragraph-tags)
+            (zip/children
+              (zip/xml-zip
+                (xml/parse-str xml-string))))))
+
 (defn paragraphs-overflowing
   [paragraphs formatting context]
   (rest 
@@ -201,6 +201,5 @@
 
 ;;; Missing
 ;; - Numbered lists
-;; - Space after paragraph lines (as opposed to below paragraphs)
 ;; - Partially nested character-level tags, e.g. <em><strong>foo</strong> bar</em>
 

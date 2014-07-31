@@ -2,6 +2,10 @@
   (:require
     [pdt.context :as context]))
 
+;;;
+;;; Living in IO land here, so tread carefully!
+;;;
+
 (defn- move-text-position-up
   [c-stream amount]
   (.. c-stream (moveTextPositionByAmount 0 amount))
