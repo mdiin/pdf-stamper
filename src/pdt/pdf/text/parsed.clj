@@ -8,18 +8,33 @@
 (defprotocol IPDFRepresentable
   (pdf-ready [this]))
 
+(defn- inline-tag-one
+  [contents style]
+  (if-let [content-style (:style contents)]
+    {:style (conj (if (= content-style [:regular])
+                    []
+                    content-style)
+                  style)
+     :contents (:contents contents)}
+    {:style [style]
+     :contents contents}))
+
+(defn- inline-tag-multi
+  [contents-s parent-style]
+  (reduce (fn [acc contents]
+            (conj acc
+                  (inline-tag-one contents parent-style)))
+          []
+          contents-s))
+
 (defn- inline-tag
   [style]
   (fn [content-vec]
-    (let [contents (first content-vec)]
-      (if-let [content-style (:style contents)]
-        {:style (conj (if (= content-style [:regular])
-                        []
-                        content-style)
-                      style)
-         :contents (:contents contents)}
-        {:style [style]
-         :contents contents}))))
+    (let [[f-contents & r-contents] (flatten content-vec)
+          contents (inline-tag-one f-contents style)]
+      (if (seq r-contents)
+        (into [contents] (inline-tag-multi r-contents style))
+        [contents]))))
 
 (def em-tag ^:private (inline-tag :em))
 (def strong-tag ^:private (inline-tag :strong))
@@ -28,7 +43,7 @@
   [elem-type]
   (fn [content-vec]
     {:elem elem-type
-     :content content-vec}))
+     :content (flatten content-vec)}))
 
 (def ul-li-tag ^:private (paragraph-tag :bullet))
 (def ol-li-tag ^:private (paragraph-tag :number))
@@ -168,7 +183,7 @@
 
 (defn paragraphs-overflowing
   [paragraphs formatting context]
-  (rest 
+  (rest
     (reduce (fn [[size-left paragraphs overflow] paragraph]
               (let [actual-formatting (merge (select-keys formatting [:width])
                                              (select-keys paragraph [:elem])
@@ -201,5 +216,4 @@
 
 ;;; Missing
 ;; - Numbered lists
-;; - Partially nested character-level tags, e.g. <em><strong>foo</strong> bar</em>
 

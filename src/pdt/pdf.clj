@@ -93,6 +93,9 @@
 (def text-1
   "<pp><h1>Banebeskrivelse</h1><p>Ham aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<em><strong>hock</strong> ullamco</em> quis, t-bone biltong kielbasa sirloin prosciutto non <b>ribeye</b> andouille chuck mollit.</p><h2>Regler</h2><p>Sausage commodo ex cupidatat in pork loin. Ham leberkas sint pork chop bacon. <em><b>Chuck ea dolor</b></em>, salami sausage ad duis tongue officia nisi veniam pork belly cupidatat.</p><p>test number two</p><h3>Huskeliste</h3><ul><li>one time <b>ape</b> and duck</li><li>two times <em><b>ape</b></em> and duck</li><li>abekat er en led hest, med mange gode grise i stalden. Test</li></ul></pp>")
 
+(def text-2
+  "<pp><p>Abekat <em>er <b>en</b> ged</em></p></pp>")
+
 (def context (->> context/base-context
                   (context/add-font font-1 :open-sans #{:regular})
                   (context/add-template template-1 template-pdf-1)
@@ -104,7 +107,7 @@
                 :two {:contents {:text text-1}}}}
 
    {:template :template-2
-    :locations {:one {:contents {:text text-1}}
+    :locations {:one {:contents {:text text-2}}
                 :two {:contents {:text "Monkey balls!"}}}}])
 
 (def out (fill-pages pages context))
