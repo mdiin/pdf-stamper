@@ -7,6 +7,10 @@ form a complete PDF.
 
 Not much to see here yet. Library is still under active development.
 
+Feeling adventurous? The library is on Clojars:
+
+[![Clojars Project](http://clojars.org/pdf-stamper/latest-version.svg)](http://clojars.org/pdf-stamper)
+
 ## Data format
 
 ### Template specifications
