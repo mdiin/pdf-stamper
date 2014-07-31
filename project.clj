@@ -1,4 +1,4 @@
-(defproject pdf-stamper "0.1.0"
+(defproject pdf-stamper "0.1.0-beta1"
   :description "Combine template descriptions and template PDFs with data to produce PDFs."
   :url "http://github.com/mdiin/pdf-stamper"
   :license {:name "Eclipse Public License"
