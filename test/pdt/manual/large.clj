@@ -1,0 +1,42 @@
+(ns pdt.manual.large
+  (:require
+    [pdt.context :as context]
+    [pdt.pdf :refer :all]
+    [clojure.edn :as edn])
+  (:import
+    [org.apache.pdfbox.pdmodel PDDocument]
+    [org.apache.pdfbox.pdmodel.edit PDPageContentStream]
+    [org.apache.pdfbox.pdmodel.graphics.xobject PDXObjectImage PDPixelMap]))
+
+(def template-1 (edn/read-string (slurp "test/templates/template-1.edn")))
+(def template-2 (edn/read-string (slurp "test/templates/template-2.edn")))
+(def template-pdf-1 "test/templates/template-1.pdf")
+(def template-pdf-2 "test/templates/template-2.pdf")
+
+(def font-1 "test/templates/OpenSans-Regular.ttf")
+
+(def image-1 (javax.imageio.ImageIO/read (clojure.java.io/as-file "test/templates/image-1.jpg")))
+(def text-1
+  "<pp><h1>Banebeskrivelse</h1><p>Ham aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<em><strong>hock</strong> ullamco</em> quis, t-bone biltong kielbasa sirloin prosciutto non <b>ribeye</b> andouille chuck mollit.</p><h2>Regler</h2><p>Sausage commodo ex cupidatat in pork loin. Ham leberkas sint pork chop bacon. <em><b>Chuck ea dolor</b></em>, salami sausage ad duis tongue officia nisi veniam pork belly cupidatat.</p><p>test number two</p><h3>Huskeliste</h3><ul><li>one time <b>ape</b> and duck</li><li>two times <em><b>ape</b></em> and duck</li><li>abekat er en led hest, med mange gode grise i stalden. Test</li></ul></pp>")
+
+(def text-2
+  "<pp><p>Abekat <em>er <b>en</b> ged</em></p></pp>")
+
+(def context (->> context/base-context
+                  (context/add-font font-1 :open-sans #{:regular})
+                  (context/add-template template-1 template-pdf-1)
+                  (context/add-template template-2 template-pdf-1)))
+
+(def pages
+  [{:template :template-1
+    :locations {:one {:contents {:image image-1}}
+                :two {:contents {:text text-1}}}}
+
+   {:template :template-2
+    :locations {:one {:contents {:text text-2}}
+                :two {:contents {:text "Monkey balls!"}}}}])
+
+(def out (fill-pages pages context))
+(.writeTo out (java.io.FileOutputStream. "out/large.pdf"))
+(.close out)
+
