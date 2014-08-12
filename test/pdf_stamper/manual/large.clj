@@ -1,7 +1,7 @@
-(ns pdt.manual.large
+(ns pdf-stamper.manual.large
   (:require
-    [pdt.context :as context]
-    [pdt.pdf :refer :all]
+    [pdf-stamper.context :as context]
+    [pdf-stamper.pdf :refer :all]
     [clojure.edn :as edn])
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]

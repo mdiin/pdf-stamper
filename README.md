@@ -37,6 +37,7 @@ Each template specification is for a one page document, describing "holes" on a 
   - `:head-2`
   - `:head-3`
 - `:align` - a map with the keys `:horizontal` and `:vertical`
+- `:aspect` - for images, shrink to `:fit` or `:preserve` aspect ratio (default: `:preserve`)
 - `:priority` - when in the drawing process to write this hole to the PDF
 
 `:x, :y` defines the top left corner of the hole on the PDF template page. `:height` and `:width` should be self-explanatory.

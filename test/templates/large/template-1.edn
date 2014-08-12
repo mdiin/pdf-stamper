@@ -3,9 +3,10 @@
  :holes [{:name :one
           :height 100.0
           :width 100.0
-          :x 200.0
-          :y 400.0
+          :x 100.0
+          :y 350.0
           :type :image
+          :aspect :fit
           :priority 1}
 
          {:name :two
