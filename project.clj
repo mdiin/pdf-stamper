@@ -6,7 +6,7 @@
   :scm {:name "git"
         :url "https://github.com/mdiin/pdf-stamper"}
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [org.clojure/data.xml "0.0.7"] ;; XML parsing
+                 [org.clojure/data.xml "0.0.8"] ;; XML parsing
                  [org.apache.pdfbox/pdfbox "1.8.6"] ;; PDF
                  ]
   :deploy-repositories [["releases" :clojars]])
