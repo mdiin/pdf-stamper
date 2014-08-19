@@ -1,7 +1,7 @@
-(ns pdf-stamper.pdf.text
+(ns pdf-stamper.text
   (:require
-    [pdf-stamper.pdf.text.parsed :as parsed-text]
-    [pdf-stamper.pdf.text.pdfbox :as pdf]))
+    [pdf-stamper.text.parsed :as parsed-text]
+    [pdf-stamper.text.pdfbox :as pdf]))
 
 (defn fill-text-parsed
   "document: the PDDocument object that is the final product

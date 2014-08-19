@@ -1,4 +1,4 @@
-(ns pdf-stamper.pdf.text.parsed
+(ns pdf-stamper.text.parsed
   (:require
     [pdf-stamper.context :as context]
     [clojure.string :as string]

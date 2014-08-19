@@ -1,4 +1,4 @@
-(ns pdf-stamper.pdf.text.pdfbox
+(ns pdf-stamper.text.pdfbox
   (:require
     [pdf-stamper.context :as context]))
 

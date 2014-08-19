@@ -11,10 +11,11 @@
 
 (ns pdf-stamper
   (:require
-    [pdf-stamper.context :as context :refer [base-context add-font add-template]]
-    [pdf-stamper.pdf.text :as text]
-    [pdf-stamper.pdf.text.parsed :as parsed-text]
-    [pdf-stamper.pdf.images :as images])
+    [pdf-stamper.context :as context]
+    [pdf-stamper.text :as text]
+    [pdf-stamper.text.parsed :as parsed-text]
+    [pdf-stamper.images :as images]
+    [potemkin])
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel.edit PDPageContentStream]))
@@ -153,6 +154,11 @@
 ;; This namespace contains referrals to the three important user-facing functions from the context namespace, namely `add-template`, `add-font`, and `base-context`.
 ;; For a detailed write-up on the context, please refer to the namespace documentation.
 
+(potemkin/import-vars
+  [pdf-stamper.context
+   add-template
+   add-font
+   base-context])
 
 ;; ## Filling pages
 ;;
