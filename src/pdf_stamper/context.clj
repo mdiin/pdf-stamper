@@ -2,7 +2,9 @@
 ;; fonts and templates, and is partly constructed by users of pdf-stamper by adding to a base context.
 ;; This base context contains the fonts included in PDFBox standard, and nothing else.
 ;;
-;; The functions in this namespace all exist to modify or query the context datastructure.
+;; The functions in this namespace all exist to modify or query the context datastructure. Functions relevant
+;; to client code is exported in the `pdf-stamper` namespace, so this namespace is intended only for internal
+;; use. However, the documentation may still be relevant to clients of pdf-stamper.
 
 (ns pdf-stamper.context
   (:require
@@ -71,9 +73,9 @@
 
 (defn add-font
   "If any templates have need of fonts that are not part of the standard
-  PDF font library, they can be added by providing a font descriptor and
-  the font name and style. As an example, had the Times New Roman bold font
-  not been present already, here is how one would add it:
+  PDF font library, they can be added by providing a font descriptor,
+  the font name and the font style. As an example, had the Times New Roman
+  bold font not been present already, here is how one would add it:
   `(add-font \"times_bold.ttf\" :times #{:bold})`.
 
   Notice how the style is a set of keywords. This is to support the combined
@@ -83,41 +85,77 @@
   In the example above the font descriptor was provided as a string representing
   a file name, but it could just as well have been a `java.io.InputStream`.
 
+  In PDF, non-standard fonts should be embedded in the document that uses them.
+  Adding a font like above does not automatically embed it to a document, since
+  the context does not have knowledge of documents. Instead, the context is 
+  updated with a seq of [font style] pairs that need to be embedded when a new
+  document is created.
+  
   *Note*: Only TTF fonts are supported."
   [desc font style context]
   (-> context
       (assoc-in [:fonts (keyword font) style :desc] desc)
       (update-in [:fonts-to-embed] #((fnil conj []) % [(keyword font) style]))))
 
+(defn embed-font
+  "On creation of a new document all fonts in the seq of fonts to embed should
+  be embedded. If for some reason a font is found in the seq of fonts to embed
+  but does not contain a descriptor, nothing happens and the context is returned
+  unmodified. In practice this situation is highly unlikely, and the check is
+  primarily in place to prevent unanticipated crashes (in case code external to
+  pdf-stamper modified the context)."
+  [doc font style context]
+  (if-let [font-desc (get-in context [:fonts font style :desc])]
+    (assoc-in context [:fonts font style] (PDTrueTypeFont/loadTTF doc font-desc))
+    context))
+
 (defn get-font
+  "When a font has been added to the context and embedded in a document, it can
+  be queried by providing the font name and style.
+ 
+  It is guaranteed that a font is always found. Thus, if no font with the given
+  name is registered the default font (Times New Roman) is used with the supplied
+  style. If again no font is found, the default font and style are used (Times New
+  Roman Regular)."
   [font-name style context]
   {:post [(instance? PDFont %)]}
   (get-in context [:fonts font-name style]
           (get-in context [:fonts :times style]
                   (get-in context [:fonts :times #{:regular}]))))
 
-(defn embed-font
-  [doc font style context]
-  (if-let [font-desc (get-in context [:fonts font style :desc])]
-    (assoc-in context [:fonts font style] (PDTrueTypeFont/loadTTF doc font-desc))
-    context))
+;; ### Font utilities
+;;
+;; The following utility functions rely on PDFBox' built-in font inspection methods. In PDFBox the font widths and heights
+;; are returned in a size that is multiplied by 1000 (presumably because of rounding, but I may be wrong), which explains
+;; the, otherwise seemingly arbitrary, divisions by 1000.
 
 (defn get-average-font-width
+  "Computing line lengths of unknown strings requires knowledge of the average
+  width of a font, given style and size."
   [font-name style size context]
   (let [font (get-font font-name style context)]
     (* (/ (.. font (getAverageFontWidth)) 1000) size)))
 
-(defn get-font-height
-  [font-name style size context]
-  (let [font (get-font font-name style context)]
-    (* (/ (.. font (getFontDescriptor) (getFontBoundingBox) (getHeight)) 1000) size)))
-
 (defn get-font-string-width
+  "With complete knowledge of the string it is possible to get the exact width
+  of the string."
   [font-name style size string context]
   (let [font (get-font font-name style context)]
     (* (/ (.. font (getStringWidth string)) 1000) size)))
 
+(defn get-font-height
+  "Calculating line heights requires knowledge of the font's height, given style
+  and size."
+  [font-name style size context]
+  (let [font (get-font font-name style context)]
+    (* (/ (.. font (getFontDescriptor) (getFontBoundingBox) (getHeight)) 1000) size)))
+
+;; ## Base context
+
 (def base-context
+  "The base context is a combination of the base fonts with the base templates,
+  and simply provides a good starting point for adding custom fonts and own
+  templates."
   {:templates base-templates
    :fonts base-fonts})
 
