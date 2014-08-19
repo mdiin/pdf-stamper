@@ -1,12 +1,7 @@
 (ns pdf-stamper.manual.large
   (:require
-    [pdf-stamper.context :as context]
-    [pdf-stamper.pdf :refer :all]
-    [clojure.edn :as edn])
-  (:import
-    [org.apache.pdfbox.pdmodel PDDocument]
-    [org.apache.pdfbox.pdmodel.edit PDPageContentStream]
-    [org.apache.pdfbox.pdmodel.graphics.xobject PDXObjectImage PDPixelMap]))
+    [pdf-stamper :refer :all]
+    [clojure.edn :as edn]))
 
 (def template-1 (edn/read-string (slurp "test/templates/large/template-1.edn")))
 (def template-2 (edn/read-string (slurp "test/templates/large/template-2.edn")))
@@ -24,12 +19,12 @@
 (def text-2
   "<pp><p>Abekat <em>er <b>en</b> ged</em></p></pp>")
 
-(def context (->> context/base-context
-                  (context/add-font font-1 :open-sans #{:regular})
-                  (context/add-font font-2 :open-sans #{:bold})
-                  (context/add-font font-3 :open-sans #{:semi-bold})
-                  (context/add-template template-1 template-pdf-1)
-                  (context/add-template template-2 template-pdf-1)))
+(def context (->> base-context
+                  (add-font font-1 :open-sans #{:regular})
+                  (add-font font-2 :open-sans #{:bold})
+                  (add-font font-3 :open-sans #{:semi-bold})
+                  (add-template template-1 template-pdf-1)
+                  (add-template template-2 template-pdf-1)))
 
 (def pages
   [{:template :template-1
