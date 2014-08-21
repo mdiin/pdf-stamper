@@ -1,10 +1,10 @@
+;; *Documentation intended for developers of pdf-stamper*
+;;
+;; The functions in this namespace are wrappers around PDFBox functionality, and as such every single function is impure (mutating a content stream).
+
 (ns pdf-stamper.text.pdfbox
   (:require
     [pdf-stamper.context :as context]))
-
-;;;
-;;; Living in IO land here, so tread carefully!
-;;;
 
 (defn- move-text-position-up
   [c-stream amount]
