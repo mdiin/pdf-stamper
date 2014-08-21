@@ -38,8 +38,10 @@ See [Documentation](#documentation) for further details.
 
 ## Documentation
 
-Documentation for both users and developers of pdf-stamper can be found in [the docs/ folder](docs/toc.html).
+Documentation for both users and developers of pdf-stamper can be found in [the Marginalia docs](https://mdiin.github.io/pdf-stamper).
 Users can safely skip the documentation for `pdf-stamper.text.parsed` and `pdf-stamper.text.pdfbox`.
+
+The documentation always describes the latest stable release; to generate the docs for a snapshot release, run `lein marg`.
 
 # Future
 
