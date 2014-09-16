@@ -9,7 +9,8 @@
 (ns pdf-stamper.context
   (:require
     [clojure.edn :as edn]
-    [clojure.string :as string])
+    [clojure.string :as string]
+    [clojure.java.io :as io])
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel.font PDFont PDType1Font PDTrueTypeFont]))
@@ -83,7 +84,8 @@
   on the individual parts of the style.
 
   In the example above the font descriptor was provided as a string representing
-  a file name, but it could just as well have been a `java.io.InputStream`.
+  a file name, but it could just as well have been a `java.net.URL`, `java.net.URI`
+  or `java.io.File`.
 
   In PDF, non-standard fonts should be embedded in the document that uses them.
   Adding a font like above does not automatically embed it to a document, since
@@ -103,10 +105,14 @@
   but does not contain a descriptor, nothing happens and the context is returned
   unmodified. In practice this situation is highly unlikely, and the check is
   primarily in place to prevent unanticipated crashes (in case code external to
-  pdf-stamper modified the context)."
+  pdf-stamper modified the context).
+  
+  The font descriptor is coerced to an input stream and loaded into the document,
+  after which it is automatically closed."
   [doc font style context]
   (if-let [font-desc (get-in context [:fonts font style :desc])]
-    (assoc-in context [:fonts font style] (PDTrueTypeFont/loadTTF doc font-desc))
+    (assoc-in context [:fonts font style] (with-open [font (io/input-stream font-desc)]
+                                            (PDTrueTypeFont/loadTTF doc font)))
     context))
 
 (defn get-font

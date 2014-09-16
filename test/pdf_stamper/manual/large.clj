@@ -9,7 +9,7 @@
 (def template-pdf-2 "test/templates/large/template-2.pdf")
 
 (def font-1 "test/templates/large/OpenSans-Regular.ttf")
-(def font-2 "test/templates/large/OpenSans-Bold.ttf")
+(def font-2 (java.io.File. "test/templates/large/OpenSans-Bold.ttf"))
 (def font-3 "test/templates/large/OpenSans-Semibold.ttf")
 
 (def image-1 (javax.imageio.ImageIO/read (clojure.java.io/as-file "test/templates/large/image-1.jpg")))
