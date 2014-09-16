@@ -56,7 +56,7 @@
 ;;
 ;; Coordinates and widths/heights are always in PDF points (1/72 inch).
 ;;
-;; *Note*: The PDF coordinate system starts from the top left, and increasing y-values move the cursor down.
+;; *Note*: The PDF coordinate system starts from the bottom left, and increasing y-values move the cursor up.
 ;;
 ;; `:priority` is effectively a layering of the contents on template pages; e.g. if you have two overlapping holes on a template
 ;; the one with the lowest value in `:priority` will be drawn on the page first, and the other hole on top of that.
