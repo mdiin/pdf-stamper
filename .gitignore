@@ -1,0 +1,9 @@
+docs/
+target/
+out/
+.lein-env
+.lein-repl-history
+.nrepl-port
+pom.xml*
+*.swp
+*.ttf
