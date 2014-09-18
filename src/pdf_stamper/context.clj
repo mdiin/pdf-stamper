@@ -131,6 +131,14 @@
 
 ;; ### Font utilities
 ;;
+;; Fonts in PDF follow the typographical conventions. Important font concepts for this project are:
+;;
+;; - *baseline*, the line that the cursor follows when writing
+;; - *ascent*, the maximum ascent of any glyph above the baseline
+;; - *descent*, the maximum descent of any glyph below the baseline
+;;
+;; When writing text the cursor origin is placed on the baseline.
+;;
 ;; The following utility functions rely on PDFBox' built-in font inspection methods. In PDFBox the font widths and heights
 ;; are returned in a size that is multiplied by 1000 (presumably because of rounding, but I may be wrong), which explains
 ;; the, otherwise seemingly arbitrary, divisions by 1000.
@@ -149,12 +157,40 @@
   (let [font (get-font font-name style context)]
     (* (/ (.. font (getStringWidth string)) 1000) size)))
 
-(defn get-font-height
-  "Calculating line heights requires knowledge of the font's height, given style
-  and size."
+(defn get-font-descent
   [font-name style size context]
-  (let [font (get-font font-name style context)]
-    (* (/ (.. font (getFontDescriptor) (getFontBoundingBox) (getHeight)) 1000) size)))
+  (let [font (get-font font-name style context)
+        font-descriptor (.. font (getFontDescriptor))
+        descent (.. font-descriptor (getDescent))]
+    (* (/ (Math/abs descent) 1000) size)))
+
+(defn get-font-ascent
+  [font-name style size context]
+  (let [font (get-font font-name style context)
+        font-descriptor (.. font (getFontDescriptor))
+        ascent (.. font-descriptor (getAscent))]
+    (* (/ ascent 1000) size)))
+
+(defn get-font-height
+  "By adding the absolute value of the font's descent to the font's ascent,
+  we get the actual height of the font. We have to use the absolute value
+  of the descent since it might be a negative value (it probably is, at least
+  for FreeType fonts)."
+  [font-name style size context]
+  (let [font (get-font font-name style context)
+        font-descriptor (.. font (getFontDescriptor))
+        ascent (.. font-descriptor (getAscent))
+        descent (.. font-descriptor (getDescent))]
+    (* (/ (+ ascent (Math/abs descent)) 1000) size)))
+
+(defn get-font-leading
+  "The leading is the extra spacing from baseline to baseline, used for
+  multi-line text."
+  [font-name style size context]
+  (let [font (get-font font-name style context)
+        font-descriptor (.. font (getFontDescriptor))
+        leading (.. font-descriptor (getLeading))]
+    (* (/ leading 1000) size)))
 
 ;; ## Base context
 

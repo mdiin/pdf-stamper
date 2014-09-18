@@ -58,12 +58,27 @@
       :right (move-text-position-right c-stream (- (:width formatting) line-length)))))
 
 (defn- add-padding-vertical
-  [c-stream line-height formatting]
-  (let [v-align (get-in formatting [:align :vertical])]
+  [c-stream line-height formatting context]
+  (let [v-align (get-in formatting [:align :vertical])
+        {:keys [font style size] :as font} formatting]
     (condp = v-align
-      :center (move-text-position-up c-stream (/ (- (:height formatting) line-height) 2))
-      :top (move-text-position-up c-stream (- (:height formatting) line-height))
-      :bottom c-stream)))
+      :center (move-text-position-up c-stream
+                                     (+ (/ (- (:height formatting)
+                                              line-height)
+                                           2)
+                                        (context/get-font-descent font
+                                                                  style
+                                                                  size
+                                                                  context)))
+      :top (move-text-position-up c-stream (- (:height formatting)
+                                              (context/get-font-ascent font
+                                                                       style
+                                                                       size
+                                                                       context)))
+      :bottom (move-text-position-up c-stream (context/get-font-descent font
+                                                                        style
+                                                                        size
+                                                                        context)))))
 
 (defn- write-linepart
   [c-stream linepart context]
@@ -158,7 +173,7 @@
         line-height (context/get-font-height font style size context)]
     (-> c-stream
         (add-padding-horizontal line-length formatting)
-        (add-padding-vertical line-height formatting)
+        (add-padding-vertical line-height formatting context)
         (set-font font size style context)
         (set-color color)
         (draw-string (:contents line)))))
