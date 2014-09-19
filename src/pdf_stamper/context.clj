@@ -53,6 +53,18 @@
   (get-in context [:templates template :overflow]))
 
 ;; ## Fonts
+;;
+;; Fonts in PDF follow the typographical conventions. Important font concepts for this project are:
+;;
+;; - *baseline*, the line that the cursor follows when writing
+;; - *ascent*, the maximum ascent of any glyph above the baseline
+;; - *descent*, the maximum descent of any glyph below the baseline
+;;
+;; These are illustrated below:
+;;
+;; ![Font explanation](images/font_explanation.png)
+;;
+;; When writing text the cursor origin is placed on the baseline.
 
 (def base-fonts
   "pdf-templates uses PDFBox under the hood, and because of that includes
@@ -130,14 +142,6 @@
                   (get-in context [:fonts :times #{:regular}]))))
 
 ;; ### Font utilities
-;;
-;; Fonts in PDF follow the typographical conventions. Important font concepts for this project are:
-;;
-;; - *baseline*, the line that the cursor follows when writing
-;; - *ascent*, the maximum ascent of any glyph above the baseline
-;; - *descent*, the maximum descent of any glyph below the baseline
-;;
-;; When writing text the cursor origin is placed on the baseline.
 ;;
 ;; The following utility functions rely on PDFBox' built-in font inspection methods. In PDFBox the font widths and heights
 ;; are returned in a size that is multiplied by 1000 (presumably because of rounding, but I may be wrong), which explains

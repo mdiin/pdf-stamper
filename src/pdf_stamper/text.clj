@@ -2,6 +2,18 @@
 ;;
 ;; Text holes contain extra formatting information compared to e.g. image holes. The amount of extra formatting information
 ;; required is a matter of the type of text hole. The requirements are described below.
+;;
+;; A text box can be visualised as such:
+;;
+;; ![Text box](images/text_boxes.png)
+;;
+;; There is no text:
+;;
+;; - Below `y`
+;; - Above `y + height`
+;; - Left of `x`
+;; - Right of `x + width`
+;;
 
 (ns pdf-stamper.text
   (:require
