@@ -108,7 +108,7 @@
 (defn- write-bullet-paragraph
   [c-stream formatting paragraph context]
   (let [{:keys [font style size color bullet-char]} formatting
-        bullet (str bullet-char)
+        bullet (str (or bullet-char (char 149)))
         bullet-length (context/get-font-string-width font style size bullet context)]
     (-> c-stream
         (set-font font size style context)

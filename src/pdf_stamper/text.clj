@@ -53,7 +53,8 @@
 
   *Future*: This is one place support for first line indent needs to be added.
 
-  `:bullet` paragraphs must contain a key to tell the system which character to use for bullets, called `:bullet-char`."
+  `:bullet` paragraphs can contain a key to tell the system which character to use for bullets, called `:bullet-char`. If the key is not present,
+  a standard character is used."
   [document c-stream data context]
   (let [formatting (merge (:format data)
                           (select-keys data [:width :height]))
