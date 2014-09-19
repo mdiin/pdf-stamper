@@ -10,7 +10,8 @@
   (:require
     [clojure.edn :as edn]
     [clojure.string :as string]
-    [clojure.java.io :as io])
+    [clojure.java.io :as io]
+    [pdf-stamper.schemas :as schemas])
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel.font PDFont PDType1Font PDTrueTypeFont]))
@@ -26,6 +27,7 @@
   When adding a template two things are needed: The template description,
   i.e. what goes where, and a locator for the PDF page to use with the
   template description. The template locator can be either a URL or a string."
+  ^{:pre [(schemas/valid-template? template-def)]}
   [template-def template-uri context]
   (if template-def
     (-> context
@@ -101,10 +103,10 @@
 
   In PDF, non-standard fonts should be embedded in the document that uses them.
   Adding a font like above does not automatically embed it to a document, since
-  the context does not have knowledge of documents. Instead, the context is 
+  the context does not have knowledge of documents. Instead, the context is
   updated with a seq of [font style] pairs that need to be embedded when a new
   document is created.
-  
+
   *Note*: Only TTF fonts are supported."
   [desc font style context]
   (-> context
