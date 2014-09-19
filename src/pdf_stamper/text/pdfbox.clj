@@ -28,8 +28,9 @@
 
 (defn- new-line-by-font
   [c-stream font size style context]
-  (let [font-height (context/get-font-height font style size context)]
-    (move-text-position-down c-stream font-height)))
+  (let [font-height (context/get-font-height font style size context)
+        font-leading (context/get-font-leading font style size context)]
+    (move-text-position-down c-stream (+ font-height font-leading))))
 
 (defn- set-font
   [c-stream font size style context]
@@ -99,9 +100,9 @@
   (let [{:keys [font size style]} formatting]
     (doseq [line paragraph]
       (-> c-stream
+          (new-line-by-font font size style context)
           (move-text-position-down (get-in formatting [:spacing :line :above]))
           (write-line line context)
-          (new-line-by-font font size style context)
           (move-text-position-down (get-in formatting [:spacing :line :below]))))))
 
 (defn- write-bullet-paragraph
@@ -112,18 +113,18 @@
     (-> c-stream
         (set-font font size style context)
         (set-color color)
+        (new-line-by-font font size style context)
         (move-text-position-down (get-in formatting [:spacing :line :above]))
-        (move-text-position-left (* bullet-length 2))
         (draw-string bullet)
         (move-text-position-right (* bullet-length 2))
-        (write-line (first paragraph) context)
-        (new-line-by-font font size style context))
+        (write-line (first paragraph) context))
     (doseq [line (rest paragraph)]
       (-> c-stream
           (move-text-position-down (get-in formatting [:spacing :line :above]))
-          (write-line line context)
           (new-line-by-font font size style context)
+          (write-line line context)
           (move-text-position-down (get-in formatting [:spacing :line :below]))))
+    (move-text-position-left c-stream (* bullet-length 2))
     c-stream))
 
 (defn- write-paragraph-internal

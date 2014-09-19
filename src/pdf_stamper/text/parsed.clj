@@ -319,8 +319,10 @@
 (defn- line-height
   [formatting context]
   (let [{:keys [font style size]} formatting
-        font-height (context/get-font-height font style size context)]
+        font-height (context/get-font-height font style size context)
+        font-leading (context/get-font-leading font style size context)]
     (+ font-height
+       font-leading
        (get-in formatting [:spacing :line :below])
        (get-in formatting [:spacing :line :above]))))
 
@@ -349,7 +351,8 @@
                     line-chars (line-length actual-formatting context)
                     paragraph-lines (break-paragraph paragraph line-chars)
                     paragraph-line-height (line-height actual-formatting context) ;; 1
-                    number-of-lines (/ size-left paragraph-line-height) ;; 2
+                    number-of-lines (Math/floor
+                                      (/ size-left paragraph-line-height)) ;; 2
                     [p o] (split-at number-of-lines paragraph-lines) ;; 3
                     paragraph (map #(line-style->format % actual-formatting) p)]
                 (if (seq o)

@@ -51,7 +51,7 @@
                                 context)]
     (-> c-stream
         (pdf/begin-text-block)
-        (pdf/set-text-position (:x data) (:y data))
+        (pdf/set-text-position (:x data) (+ (:y data) (:height formatting)))
         (pdf/write-paragraphs formatting paragraphs context)
         (pdf/end-text-block))
     (parsed-text/handle-overflow overflow (:name data))))

@@ -65,11 +65,16 @@
   "When filling the holes on a page we have to take into account that Clojure sequences are
   lazy by default; i.e. we cannot expect the side-effects of stamping to the PDF page to have
   happened just by applying the `map` function. `doall` is used to force all side-effects
-  before returning the resulting seq of overflowing holes."
+  before returning the resulting seq of overflowing holes.
+
+  *Note*: Holes where the page does not contain data will be skipped. One consequence of
+  this is that image holes cannot be used to make a background for text holes that should
+  overflow. This is intentional, as any graphic layout should be decoupled from the stamping
+  process."
   [document c-stream holes page-data context]
   (doall
     (map (fn [hole]
-           (let [location-data (get-in page-data [:locations (:name hole)])]
+           (when-let [location-data (get-in page-data [:locations (:name hole)])]
              (fill-hole document c-stream hole location-data context)))
          (sort-by :priority holes))))
 
@@ -151,7 +156,8 @@
           overflow-page-data {:template template-overflow
                               :locations (into {} overflows)}]
       (.close template-c-stream)
-      (if (seq (:locations overflow-page-data))
+      (if (and (seq (:locations overflow-page-data))
+               (:template overflow-page-data))
         (conj (fill-page document overflow-page-data context) template-doc)
         [template-doc]))))
 
