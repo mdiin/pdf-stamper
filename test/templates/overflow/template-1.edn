@@ -20,16 +20,16 @@
                                :size 12
                                :color [0 0 0]
                                :indent {:all 0}
-                               :spacing {:paragraph {:below 0
+                               :spacing {:paragraph {:below 10
                                                      :above 0}
-                                         :line {:below 0
+                                         :line {:below 5
                                                 :above 0}}}
                    :head-1 {:font :helvetica
                             :style #{:bold}
                             :size 24
                             :color [0 0 0]
                             :indent {:all 0}
-                            :spacing {:paragraph {:below 0
+                            :spacing {:paragraph {:below 10
                                                   :above 0}
                                       :line {:below 0
                                              :above 0}}}

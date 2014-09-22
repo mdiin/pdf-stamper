@@ -361,7 +361,10 @@
                      (conj paragraphs [actual-formatting paragraph])
                      paragraphs)
                    (conj overflow [actual-formatting o])] ;; 4
-                  [(- size-left (* paragraph-line-height (count paragraph)))
+                  [(- size-left 
+                      (* paragraph-line-height (count paragraph))
+                      (get-in actual-formatting [:spacing :paragraph :above])
+                      (get-in actual-formatting [:spacing :paragraph :below]))
                    (conj paragraphs [actual-formatting paragraph])
                    overflow])))
             [(:height formatting) [] []]
