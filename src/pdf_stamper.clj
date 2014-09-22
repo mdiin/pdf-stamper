@@ -74,10 +74,11 @@
   process."
   [document c-stream holes page-data context]
   (doall
-    (map (fn [hole]
-           (when-let [location-data (get-in page-data [:locations (:name hole)])]
-             (fill-hole document c-stream hole location-data context)))
-         (sort-by :priority holes))))
+    (into {}
+          (map (fn [hole]
+                 (when-let [location-data (get-in page-data [:locations (:name hole)])]
+                   (fill-hole document c-stream hole location-data context)))
+               (sort-by :priority holes)))))
 
 ;; The types supported out of the box are:
 ;;
@@ -140,7 +141,8 @@
   holes (if any) are extracted from the context.
 
   Any overflowing holes are handled by calling recursively with the
-  overflow.
+  overflow. All other holes are copied as-is to the new page, to make
+  repeating holes possible.
 
   *Future*: It would probably be wise to find a better way than a direct
   recursive call to handle overflows. Otherwise handling large bodies of
@@ -155,7 +157,8 @@
     (.addPage document template-page)
     (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
           overflow-page-data {:template template-overflow
-                              :locations (into {} overflows)}]
+                              :locations (when (seq overflows)
+                                           (merge (:locations page-data) overflows))}]
       (.close template-c-stream)
       (if (and (seq (:locations overflow-page-data))
                (:template overflow-page-data))
