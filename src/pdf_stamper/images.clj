@@ -6,7 +6,7 @@
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel.edit PDPageContentStream]
-    [org.apache.pdfbox.pdmodel.graphics.xobject PDXObjectImage PDPixelMap]))
+    [org.apache.pdfbox.pdmodel.graphics.xobject PDJpeg PDXObjectImage PDPixelMap]))
 
 (defn- scale-dimensions
   "To calculate the new dimensions for scaled images, the image
@@ -63,10 +63,14 @@
   dimensions of the hole. The value of the `:aspect` key in `data`
   defines whether the image is shrunk to fit, or aspect ratio is
   preserved. Possible values are `:fit` or `:preserve`, with
-  `:preserve` being the default."
+  `:preserve` being the default.
+  
+  *Note*: Using `PDJpeg` does not cancel out support for PNGs. It
+  seems that the PNGs are internally converted to JPEGs (**TO BE
+  CONFIRMED**)."
   [document c-stream data context]
   (let [aspect-ratio (get data :aspect :preserve)
-        image (PDPixelMap. document (get-in data [:contents :image]))]
+        image (PDJpeg. document (get-in data [:contents :image]))]
     (condp = aspect-ratio
       :preserve (draw-image-preserve-aspect c-stream image data)
       :fit (draw-image c-stream image data))))
