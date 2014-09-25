@@ -64,13 +64,18 @@
   defines whether the image is shrunk to fit, or aspect ratio is
   preserved. Possible values are `:fit` or `:preserve`, with
   `:preserve` being the default.
+
+  It is possible to specify the quality of the stamped image by
+  setting the `:quality` key to a value between `0.0` and `1.0`. The
+  default quality if not specified is `0.75`.
   
   *Note*: Using `PDJpeg` does not cancel out support for PNGs. It
   seems that the PNGs are internally converted to JPEGs (**TO BE
   CONFIRMED**)."
   [document c-stream data context]
   (let [aspect-ratio (get data :aspect :preserve)
-        image (PDJpeg. document (get-in data [:contents :image]))]
+        image-quality (get data :quality 0.75)
+        image (PDJpeg. document (get-in data [:contents :image]) image-quality)]
     (condp = aspect-ratio
       :preserve (draw-image-preserve-aspect c-stream image data)
       :fit (draw-image c-stream image data))))

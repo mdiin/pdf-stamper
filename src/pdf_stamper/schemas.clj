@@ -15,6 +15,7 @@
 (def ImageHole
   (merge BaseHole
          {:type (s/enum :image)
+          (s/optional-key :quality) s/Num
           (s/optional-key :aspect) (s/enum :preserve :fit)}))
 
 (def ParagraphFormat
