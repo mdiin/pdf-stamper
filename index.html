@@ -3028,8 +3028,8 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>pdf-stamper -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">pdf-stamper</h1><h2 class="project-version">0.2.0</h2><br /><p>Combine template descriptions and template PDFs with data to produce PDFs.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.6.0</td></tr><tr><td class="dep-name">org.clojure/data.xml</td><td class="dotted"><hr /></td><td class="dep-version">0.0.8</td></tr><tr><td class="dep-name">org.apache.pdfbox/pdfbox</td><td class="dotted"><hr /></td><td class="dep-version">1.8.6</td></tr><tr><td class="dep-name">potemkin</td><td class="dotted"><hr /></td><td class="dep-version">0.3.8</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#pdf-stamper">pdf-stamper</a></li><li><a href="#pdf-stamper.context">pdf-stamper.context</a></li><li><a href="#pdf-stamper.images">pdf-stamper.images</a></li><li><a href="#pdf-stamper.text">pdf-stamper.text</a></li><li><a href="#pdf-stamper.text.parsed">pdf-stamper.text.parsed</a></li><li><a href="#pdf-stamper.text.pdfbox">pdf-stamper.text.pdfbox</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#pdf-stamper" name="pdf-stamper"><h1 class="project-name">pdf-stamper</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>PDF creation from templates</h2>
+</script><title>pdf-stamper -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">pdf-stamper</h1><h2 class="project-version">0.2.1</h2><br /><p>Combine template descriptions and template PDFs with data to produce PDFs.</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.6.0</td></tr><tr><td class="dep-name">org.clojure/data.xml</td><td class="dotted"><hr /></td><td class="dep-version">0.0.8</td></tr><tr><td class="dep-name">org.apache.pdfbox/pdfbox</td><td class="dotted"><hr /></td><td class="dep-version">1.8.7</td></tr><tr><td class="dep-name">potemkin</td><td class="dotted"><hr /></td><td class="dep-version">0.3.9</td></tr><tr><td class="dep-name">prismatic/schema</td><td class="dotted"><hr /></td><td class="dep-version">0.3.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#pdf-stamper">pdf-stamper</a></li><li><a href="#pdf-stamper.context">pdf-stamper.context</a></li><li><a href="#pdf-stamper.images">pdf-stamper.images</a></li><li><a href="#pdf-stamper.schemas">pdf-stamper.schemas</a></li><li><a href="#pdf-stamper.text">pdf-stamper.text</a></li><li><a href="#pdf-stamper.text.parsed">pdf-stamper.text.parsed</a></li><li><a href="#pdf-stamper.text.pdfbox">pdf-stamper.text.pdfbox</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#pdf-stamper" name="pdf-stamper"><h1 class="project-name">pdf-stamper</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>PDF creation from templates</h2>
 
 <p>pdf-stamper lets you build complete PDF documents without worrying about building the layout in code.
 Those who have tried will know that it is by no means a simple task getting the layout
@@ -3086,7 +3086,8 @@ are put, and how.</p>
 
 <p>Coordinates and widths/heights are always in PDF points (1/72 inch).</p>
 
-<p><em>Note</em>: The PDF coordinate system starts from the top left, and increasing y-values move the cursor down.</p>
+<p><em>Note</em>: The PDF coordinate system starts from the bottom left, and increasing y-values move the cursor up. Thus, all <code>(x,y)</code>
+coordinates specified in templates should be to the lower left corner.</p>
 
 <p><code>:priority</code> is effectively a layering of the contents on template pages; e.g. if you have two overlapping holes on a template
 the one with the lowest value in <code>:priority</code> will be drawn on the page first, and the other hole on top of that.</p>
@@ -3094,13 +3095,16 @@ the one with the lowest value in <code>:priority</code> will be drawn on the pag
   lazy by default; i.e. we cannot expect the side-effects of stamping to the PDF page to have
   happened just by applying the <code>map</code> function. <code>doall</code> is used to force all side-effects
   before returning the resulting seq of overflowing holes.</p>
+
+<p>  <em>Note</em>: Holes where the page does not contain data will be skipped.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- fill-holes
   [document c-stream holes page-data context]
   (doall
-    (map (fn [hole]
-           (let [location-data (get-in page-data [:locations (:name hole)])]
-             (fill-hole document c-stream hole location-data context)))
-         (sort-by :priority holes))))</pre></td></tr><tr><td class="docs"><p>The types supported out of the box are:</p>
+    (into {}
+          (map (fn [hole]
+                 (when-let [location-data (get-in page-data [:locations (:name hole)])]
+                   (fill-hole document c-stream hole location-data context)))
+               (sort-by :priority holes)))))</pre></td></tr><tr><td class="docs"><p>The types supported out of the box are:</p>
 
 <ul>
 <li><code>:image</code></li>
@@ -3155,7 +3159,8 @@ For a detailed write-up on the context, please refer to the namespace documentat
   holes (if any) are extracted from the context.</p>
 
 <p>  Any overflowing holes are handled by calling recursively with the
-  overflow.</p>
+  overflow. All other holes are copied as-is to the new page, to make
+  repeating holes possible.</p>
 
 <p>  <em>Future</em>: It would probably be wise to find a better way than a direct
   recursive call to handle overflows. Otherwise handling large bodies of
@@ -3171,9 +3176,11 @@ For a detailed write-up on the context, please refer to the namespace documentat
     (.addPage document template-page)
     (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
           overflow-page-data {:template template-overflow
-                              :locations (into {} overflows)}]
+                              :locations (when (seq overflows)
+                                           (merge (:locations page-data) overflows))}]
       (.close template-c-stream)
-      (if (seq (:locations overflow-page-data))
+      (if (and (seq (:locations overflow-page-data))
+               (:template overflow-page-data))
         (conj (fill-page document overflow-page-data context) template-doc)
         [template-doc]))))</pre></td></tr><tr><td class="docs"><p>When the context is populated with fonts and templates, this is the
   function to call. The data passed in as the first argument is a description
@@ -3220,7 +3227,9 @@ use. However, the documentation may still be relevant to clients of pdf-stamper.
 </td><td class="codes"><pre class="brush: clojure">(ns pdf-stamper.context
   (:require
     [clojure.edn :as edn]
-    [clojure.string :as string])
+    [clojure.string :as string]
+    [clojure.java.io :as io]
+    [pdf-stamper.schemas :as schemas])
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel.font PDFont PDType1Font PDTrueTypeFont]))</pre></td></tr><tr><td class="docs"><h2>Templates</h2>
@@ -3231,6 +3240,7 @@ use. However, the documentation may still be relevant to clients of pdf-stamper.
   i.e. what goes where, and a locator for the PDF page to use with the
   template description. The template locator can be either a URL or a string.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn add-template
+  ^{:pre [(schemas/valid-template? template-def)]}
   [template-def template-uri context]
   (if template-def
     (-&gt; context
@@ -3250,6 +3260,20 @@ use. However, the documentation may still be relevant to clients of pdf-stamper.
 </td><td class="codes"><pre class="brush: clojure">(defn get-template-overflow
   [template context]
   (get-in context [:templates template :overflow]))</pre></td></tr><tr><td class="docs"><h2>Fonts</h2>
+
+<p>Fonts in PDF follow the typographical conventions. Important font concepts for this project are:</p>
+
+<ul>
+<li><em>baseline</em>, the line that the cursor follows when writing</li>
+<li><em>ascent</em>, the maximum ascent of any glyph above the baseline</li>
+<li><em>descent</em>, the maximum descent of any glyph below the baseline</li>
+</ul>
+
+<p>These are illustrated below:</p>
+
+<p><img src="images/font_explanation.png" alt="Font explanation" /></p>
+
+<p>When writing text the cursor origin is placed on the baseline.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>pdf-templates uses PDFBox under the hood, and because of that includes
   all the standard PDF fonts defined by PDFBox.</p>
 </td><td class="codes"><pre class="brush: clojure">(def base-fonts
@@ -3277,11 +3301,12 @@ use. However, the documentation may still be relevant to clients of pdf-stamper.
   on the individual parts of the style.</p>
 
 <p>  In the example above the font descriptor was provided as a string representing
-  a file name, but it could just as well have been a <code>java.io.InputStream</code>.</p>
+  a file name, but it could just as well have been a <code>java.net.URL</code>, <code>java.net.URI</code>
+  or <code>java.io.File</code>.</p>
 
 <p>  In PDF, non-standard fonts should be embedded in the document that uses them.
   Adding a font like above does not automatically embed it to a document, since
-  the context does not have knowledge of documents. Instead, the context is 
+  the context does not have knowledge of documents. Instead, the context is
   updated with a seq of [font style] pairs that need to be embedded when a new
   document is created.</p>
 
@@ -3296,10 +3321,14 @@ use. However, the documentation may still be relevant to clients of pdf-stamper.
   unmodified. In practice this situation is highly unlikely, and the check is
   primarily in place to prevent unanticipated crashes (in case code external to
   pdf-stamper modified the context).</p>
+
+<p>  The font descriptor is coerced to an input stream and loaded into the document,
+  after which it is automatically closed.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn embed-font
   [doc font style context]
   (if-let [font-desc (get-in context [:fonts font style :desc])]
-    (assoc-in context [:fonts font style] (PDTrueTypeFont/loadTTF doc font-desc))
+    (assoc-in context [:fonts font style] (with-open [font (io/input-stream font-desc)]
+                                            (PDTrueTypeFont/loadTTF doc font)))
     context))</pre></td></tr><tr><td class="docs"><p>When a font has been added to the context and embedded in a document, it can
   be queried by providing the font name and style.</p>
 
@@ -3327,12 +3356,36 @@ the, otherwise seemingly arbitrary, divisions by 1000.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-font-string-width
   [font-name style size string context]
   (let [font (get-font font-name style context)]
-    (* (/ (.. font (getStringWidth string)) 1000) size)))</pre></td></tr><tr><td class="docs"><p>Calculating line heights requires knowledge of the font's height, given style
-  and size.</p>
+    (* (/ (.. font (getStringWidth string)) 1000) size)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn get-font-descent
+  [font-name style size context]
+  (let [font (get-font font-name style context)
+        font-descriptor (.. font (getFontDescriptor))
+        descent (.. font-descriptor (getDescent))]
+    (* (/ (Math/abs descent) 1000) size)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn get-font-ascent
+  [font-name style size context]
+  (let [font (get-font font-name style context)
+        font-descriptor (.. font (getFontDescriptor))
+        ascent (.. font-descriptor (getAscent))]
+    (* (/ ascent 1000) size)))</pre></td></tr><tr><td class="docs"><p>By adding the absolute value of the font's descent to the font's ascent,
+  we get the actual height of the font. We have to use the absolute value
+  of the descent since it might be a negative value (it probably is, at least
+  for FreeType fonts).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-font-height
   [font-name style size context]
-  (let [font (get-font font-name style context)]
-    (* (/ (.. font (getFontDescriptor) (getFontBoundingBox) (getHeight)) 1000) size)))</pre></td></tr><tr><td class="docs"><h2>Base context</h2>
+  (let [font (get-font font-name style context)
+        font-descriptor (.. font (getFontDescriptor))
+        ascent (.. font-descriptor (getAscent))
+        descent (.. font-descriptor (getDescent))]
+    (* (/ (+ ascent (Math/abs descent)) 1000) size)))</pre></td></tr><tr><td class="docs"><p>The leading is the extra spacing from baseline to baseline, used for
+  multi-line text.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn get-font-leading
+  [font-name style size context]
+  (let [font (get-font font-name style context)
+        font-descriptor (.. font (getFontDescriptor))
+        leading (.. font-descriptor (getLeading))]
+    (* (/ leading 1000) size)))</pre></td></tr><tr><td class="docs"><h2>Base context</h2>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>The base context is a combination of the base fonts with the base templates,
   and simply provides a good starting point for adding custom fonts and own
   templates.</p>
@@ -3346,7 +3399,7 @@ the, otherwise seemingly arbitrary, divisions by 1000.</p>
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel.edit PDPageContentStream]
-    [org.apache.pdfbox.pdmodel.graphics.xobject PDXObjectImage PDPixelMap]))</pre></td></tr><tr><td class="docs"><p>To calculate the new dimensions for scaled images, the image
+    [org.apache.pdfbox.pdmodel.graphics.xobject PDJpeg PDXObjectImage PDPixelMap]))</pre></td></tr><tr><td class="docs"><p>To calculate the new dimensions for scaled images, the image
   is first scaled such that the height fits into the available
   bounds. If the image width is still larger than it should be,
   it means that the scaling factor for the width is larger than
@@ -3395,16 +3448,88 @@ the, otherwise seemingly arbitrary, divisions by 1000.</p>
   defines whether the image is shrunk to fit, or aspect ratio is
   preserved. Possible values are <code>:fit</code> or <code>:preserve</code>, with
   <code>:preserve</code> being the default.</p>
+
+<p>  <em>Note</em>: Using <code>PDJpeg</code> does not cancel out support for PNGs. It
+  seems that the PNGs are internally converted to JPEGs (**TO BE
+  CONFIRMED**).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn fill-image
   [document c-stream data context]
   (let [aspect-ratio (get data :aspect :preserve)
-        image (PDPixelMap. document (get-in data [:contents :image]))]
+        image (PDJpeg. document (get-in data [:contents :image]))]
     (condp = aspect-ratio
       :preserve (draw-image-preserve-aspect c-stream image data)
-      :fit (draw-image c-stream image data))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#pdf-stamper.text" name="pdf-stamper.text"><h1 class="project-name">pdf-stamper.text</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Text holes</h2>
+      :fit (draw-image c-stream image data))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#pdf-stamper.schemas" name="pdf-stamper.schemas"><h1 class="project-name">pdf-stamper.schemas</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>User input to pdf-stamper is validated using the schema library from Prismatic.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns pdf-stamper.schemas
+  (:require
+    [schema.core :as s]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def BaseHole
+  {:height s/Num
+   :width s/Num
+   :x s/Num
+   :y s/Num
+   :name s/Keyword
+   :priority s/Int})</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ImageHole
+  (merge BaseHole
+         {:type (s/enum :image)
+          (s/optional-key :aspect) (s/enum :preserve :fit)}))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ParagraphFormat
+  {:font s/Keyword
+   :style #{s/Keyword}
+   :size s/Int
+   :color [(s/one s/Int &quot;R&quot;) (s/one s/Int &quot;G&quot;) (s/one s/Int &quot;B&quot;)]
+   :spacing {:paragraph {:above s/Num
+                         :below s/Num}
+             :line {:above s/Num
+                    :below s/Num}}
+   :indent {:all s/Num}})</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def BulletParagraphFormat
+  (merge ParagraphFormat
+         {(s/optional-key :bullet-char) s/Str}))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def TextHole
+  (merge BaseHole
+          {:format ParagraphFormat
+           :type (s/enum :text)
+           :align {:horizontal (s/enum :center :left :right)
+                   :vertical (s/enum :center :top :bottom)}}))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def TextParsedHole
+  (merge BaseHole
+         {:type (s/enum :text-parsed)
+          :format {:paragraph ParagraphFormat
+                   :head-1 ParagraphFormat
+                   :head-2 ParagraphFormat
+                   :head-3 ParagraphFormat
+                   :bullet BulletParagraphFormat
+                   :number BulletParagraphFormat}}))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def Hole
+  (s/either
+    ImageHole
+    TextHole
+    TextParsedHole))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def Template
+  {:name s/Keyword
+   (s/optional-key :overflow) s/Keyword
+   :holes [Hole]})</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn valid-template?
+  [template]
+  (not (s/check Template template)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#pdf-stamper.text" name="pdf-stamper.text"><h1 class="project-name">pdf-stamper.text</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Text holes</h2>
 
 <p>Text holes contain extra formatting information compared to e.g. image holes. The amount of extra formatting information
 required is a matter of the type of text hole. The requirements are described below.</p>
+
+<p>A text box can be visualised as such:</p>
+
+<p><img src="images/text_boxes.png" alt="Text box" /></p>
+
+<p>There is no text:</p>
+
+<ul>
+<li>Below <code>y</code></li>
+<li>Above <code>y + height</code></li>
+<li>Left of <code>x</code></li>
+<li>Right of <code>x + width</code></li>
+</ul>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns pdf-stamper.text
   (:require
@@ -3441,7 +3566,8 @@ The indent map makes it possible to define indentation of all lines of a paragra
 
 <p><em>Future</em>: This is one place support for first line indent needs to be added.</p>
 
-<p><code>:bullet</code> paragraphs must contain a key to tell the system which character to use for bullets, called <code>:bullet-char</code>.</p></li>
+<p><code>:bullet</code> paragraphs can contain a key to tell the system which character to use for bullets, called <code>:bullet-char</code>. If the key is not present,
+a standard character is used.</p></li>
 </ul>
 </td><td class="codes"><pre class="brush: clojure">(defn fill-text-parsed
   [document c-stream data context]
@@ -3453,7 +3579,7 @@ The indent map makes it possible to define indentation of all lines of a paragra
                                 context)]
     (-&gt; c-stream
         (pdf/begin-text-block)
-        (pdf/set-text-position (:x data) (:y data))
+        (pdf/set-text-position (:x data) (+ (:y data) (:height formatting)))
         (pdf/write-paragraphs formatting paragraphs context)
         (pdf/end-text-block))
     (parsed-text/handle-overflow overflow (:name data))))</pre></td></tr><tr><td class="docs"><h3>Text holes</h3>
@@ -3754,8 +3880,10 @@ the tag is stripped and the representation is built for the contents instead. Th
 </td><td class="codes"><pre class="brush: clojure">(defn- line-height
   [formatting context]
   (let [{:keys [font style size]} formatting
-        font-height (context/get-font-height font style size context)]
+        font-height (context/get-font-height font style size context)
+        font-leading (context/get-font-leading font style size context)]
     (+ font-height
+       font-leading
        (get-in formatting [:spacing :line :below])
        (get-in formatting [:spacing :line :above]))))</pre></td></tr><tr><td class="docs"><p>When stamping paragraphs of text to a hole it is not
   certain that enough space is available. To figure out
@@ -3784,7 +3912,8 @@ overflow (;; 4).</p></li>
                     line-chars (line-length actual-formatting context)
                     paragraph-lines (break-paragraph paragraph line-chars)
                     paragraph-line-height (line-height actual-formatting context) ;; 1
-                    number-of-lines (/ size-left paragraph-line-height) ;; 2
+                    number-of-lines (Math/floor
+                                      (/ size-left paragraph-line-height)) ;; 2
                     [p o] (split-at number-of-lines paragraph-lines) ;; 3
                     paragraph (map #(line-style-&gt;format % actual-formatting) p)]
                 (if (seq o)
@@ -3793,7 +3922,10 @@ overflow (;; 4).</p></li>
                      (conj paragraphs [actual-formatting paragraph])
                      paragraphs)
                    (conj overflow [actual-formatting o])] ;; 4
-                  [(- size-left (* paragraph-line-height (count paragraph)))
+                  [(- size-left 
+                      (* paragraph-line-height (count paragraph))
+                      (get-in actual-formatting [:spacing :paragraph :above])
+                      (get-in actual-formatting [:spacing :paragraph :below]))
                    (conj paragraphs [actual-formatting paragraph])
                    overflow])))
             [(:height formatting) [] []]
@@ -3831,8 +3963,9 @@ overflow (;; 4).</p></li>
   c-stream)</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- new-line-by-font
   [c-stream font size style context]
-  (let [font-height (context/get-font-height font style size context)]
-    (move-text-position-down c-stream font-height)))</pre></td></tr><tr><td class="docs">
+  (let [font-height (context/get-font-height font style size context)
+        font-leading (context/get-font-leading font style size context)]
+    (move-text-position-down c-stream (+ font-height font-leading))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- set-font
   [c-stream font size style context]
   (let [font-obj (context/get-font font style context)]
@@ -3856,12 +3989,27 @@ overflow (;; 4).</p></li>
       :left c-stream
       :right (move-text-position-right c-stream (- (:width formatting) line-length)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- add-padding-vertical
-  [c-stream line-height formatting]
-  (let [v-align (get-in formatting [:align :vertical])]
+  [c-stream line-height formatting context]
+  (let [v-align (get-in formatting [:align :vertical])
+        {:keys [font style size] :as font} formatting]
     (condp = v-align
-      :center (move-text-position-up c-stream (/ (- (:height formatting) line-height) 2))
-      :top (move-text-position-up c-stream (- (:height formatting) line-height))
-      :bottom c-stream)))</pre></td></tr><tr><td class="docs">
+      :center (move-text-position-up c-stream
+                                     (+ (/ (- (:height formatting)
+                                              line-height)
+                                           2)
+                                        (context/get-font-descent font
+                                                                  style
+                                                                  size
+                                                                  context)))
+      :top (move-text-position-up c-stream (- (:height formatting)
+                                              (context/get-font-ascent font
+                                                                       style
+                                                                       size
+                                                                       context)))
+      :bottom (move-text-position-up c-stream (context/get-font-descent font
+                                                                        style
+                                                                        size
+                                                                        context)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- write-linepart
   [c-stream linepart context]
   (let [{:keys [font size style color]} (:format linepart)]
@@ -3879,30 +4027,30 @@ overflow (;; 4).</p></li>
   (let [{:keys [font size style]} formatting]
     (doseq [line paragraph]
       (-&gt; c-stream
+          (new-line-by-font font size style context)
           (move-text-position-down (get-in formatting [:spacing :line :above]))
           (write-line line context)
-          (new-line-by-font font size style context)
           (move-text-position-down (get-in formatting [:spacing :line :below]))))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- write-bullet-paragraph
   [c-stream formatting paragraph context]
   (let [{:keys [font style size color bullet-char]} formatting
-        bullet (str bullet-char)
+        bullet (str (or bullet-char (char 149)))
         bullet-length (context/get-font-string-width font style size bullet context)]
     (-&gt; c-stream
         (set-font font size style context)
         (set-color color)
+        (new-line-by-font font size style context)
         (move-text-position-down (get-in formatting [:spacing :line :above]))
-        (move-text-position-left (* bullet-length 2))
         (draw-string bullet)
         (move-text-position-right (* bullet-length 2))
-        (write-line (first paragraph) context)
-        (new-line-by-font font size style context))
+        (write-line (first paragraph) context))
     (doseq [line (rest paragraph)]
       (-&gt; c-stream
           (move-text-position-down (get-in formatting [:spacing :line :above]))
-          (write-line line context)
           (new-line-by-font font size style context)
+          (write-line line context)
           (move-text-position-down (get-in formatting [:spacing :line :below]))))
+    (move-text-position-left c-stream (* bullet-length 2))
     c-stream))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn- write-paragraph-internal
   [c-stream formatting paragraph context]
@@ -3945,7 +4093,7 @@ overflow (;; 4).</p></li>
         line-height (context/get-font-height font style size context)]
     (-&gt; c-stream
         (add-padding-horizontal line-length formatting)
-        (add-padding-vertical line-height formatting)
+        (add-padding-vertical line-height formatting context)
         (set-font font size style context)
         (set-color color)
         (draw-string (:contents line)))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
