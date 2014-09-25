@@ -3028,7 +3028,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>pdf-stamper -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">pdf-stamper</h1><h2 class="project-version">0.2.1</h2><br /><p>Combine template descriptions and template PDFs with data to produce PDFs.</p>
+</script><title>pdf-stamper -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">pdf-stamper</h1><h2 class="project-version">0.2.2</h2><br /><p>Combine template descriptions and template PDFs with data to produce PDFs.</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.6.0</td></tr><tr><td class="dep-name">org.clojure/data.xml</td><td class="dotted"><hr /></td><td class="dep-version">0.0.8</td></tr><tr><td class="dep-name">org.apache.pdfbox/pdfbox</td><td class="dotted"><hr /></td><td class="dep-version">1.8.7</td></tr><tr><td class="dep-name">potemkin</td><td class="dotted"><hr /></td><td class="dep-version">0.3.9</td></tr><tr><td class="dep-name">prismatic/schema</td><td class="dotted"><hr /></td><td class="dep-version">0.3.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#pdf-stamper">pdf-stamper</a></li><li><a href="#pdf-stamper.context">pdf-stamper.context</a></li><li><a href="#pdf-stamper.images">pdf-stamper.images</a></li><li><a href="#pdf-stamper.schemas">pdf-stamper.schemas</a></li><li><a href="#pdf-stamper.text">pdf-stamper.text</a></li><li><a href="#pdf-stamper.text.parsed">pdf-stamper.text.parsed</a></li><li><a href="#pdf-stamper.text.pdfbox">pdf-stamper.text.pdfbox</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#pdf-stamper" name="pdf-stamper"><h1 class="project-name">pdf-stamper</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>PDF creation from templates</h2>
 
 <p>pdf-stamper lets you build complete PDF documents without worrying about building the layout in code.
@@ -3449,13 +3449,18 @@ the, otherwise seemingly arbitrary, divisions by 1000.</p>
   preserved. Possible values are <code>:fit</code> or <code>:preserve</code>, with
   <code>:preserve</code> being the default.</p>
 
+<p>  It is possible to specify the quality of the stamped image by
+  setting the <code>:quality</code> key to a value between <code>0.0</code> and <code>1.0</code>. The
+  default quality if not specified is <code>0.75</code>.</p>
+
 <p>  <em>Note</em>: Using <code>PDJpeg</code> does not cancel out support for PNGs. It
   seems that the PNGs are internally converted to JPEGs (**TO BE
   CONFIRMED**).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn fill-image
   [document c-stream data context]
   (let [aspect-ratio (get data :aspect :preserve)
-        image (PDJpeg. document (get-in data [:contents :image]))]
+        image-quality (get data :quality 0.75)
+        image (PDJpeg. document (get-in data [:contents :image]) image-quality)]
     (condp = aspect-ratio
       :preserve (draw-image-preserve-aspect c-stream image data)
       :fit (draw-image c-stream image data))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#pdf-stamper.schemas" name="pdf-stamper.schemas"><h1 class="project-name">pdf-stamper.schemas</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>User input to pdf-stamper is validated using the schema library from Prismatic.</p>
@@ -3473,6 +3478,7 @@ the, otherwise seemingly arbitrary, divisions by 1000.</p>
 </td><td class="codes"><pre class="brush: clojure">(def ImageHole
   (merge BaseHole
          {:type (s/enum :image)
+          (s/optional-key :quality) s/Num
           (s/optional-key :aspect) (s/enum :preserve :fit)}))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def ParagraphFormat
   {:font s/Keyword
