@@ -68,10 +68,7 @@
   happened just by applying the `map` function. `doall` is used to force all side-effects
   before returning the resulting seq of overflowing holes.
 
-  *Note*: Holes where the page does not contain data will be skipped. One consequence of
-  this is that image holes cannot be used to make a background for text holes that should
-  overflow. This is intentional, as any graphic layout should be decoupled from the stamping
-  process."
+  *Note*: Holes where the page does not contain data will be skipped."
   [document c-stream holes page-data context]
   (doall
     (into {}
