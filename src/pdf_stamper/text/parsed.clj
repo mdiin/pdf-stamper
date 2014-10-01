@@ -299,10 +299,11 @@
   a particular element type for the paragraph (i.e. you
   have to know in advance which kind of paragraph you are
   reassembling)."
-  [elem-type lines]
-  {:elem elem-type
-   :content (mapcat collect-line (partition-by :style
-                                                (apply concat lines)))})
+  [formatting lines]
+  (merge 
+    (select-keys formatting [:broken :elem])
+    {:content (mapcat collect-line (partition-by :style
+                                                (apply concat lines)))}))
 
 ;; ## Text overflow
 
@@ -347,7 +348,7 @@
   (rest
     (reduce (fn [[size-left paragraphs overflow] paragraph]
               (let [actual-formatting (merge (select-keys formatting [:width])
-                                             (select-keys paragraph [:elem])
+                                             (select-keys paragraph [:elem :broken])
                                              (get formatting (:elem paragraph)))
                     line-chars (line-length actual-formatting context)
                     paragraph-lines (break-paragraph paragraph line-chars)
@@ -361,7 +362,7 @@
                    (if (seq paragraph)
                      (conj paragraphs [actual-formatting paragraph])
                      paragraphs)
-                   (conj overflow [actual-formatting o])] ;; 4
+                   (conj overflow [(assoc actual-formatting :broken true) o])] ;; 4
                   [(- size-left 
                       (* paragraph-line-height (count paragraph))
                       (get-in actual-formatting [:spacing :paragraph :above])
@@ -379,6 +380,6 @@
   (when (seq overflow)
     {hole {:contents {:text (map (fn
                                    [[formatting paragraph]]
-                                   (unbreak-paragraph (:elem formatting) paragraph))
+                                   (unbreak-paragraph formatting paragraph))
                                  overflow)}}}))
 

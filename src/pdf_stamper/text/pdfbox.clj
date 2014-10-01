@@ -107,7 +107,7 @@
 
 (defn- write-bullet-paragraph
   [c-stream formatting paragraph context]
-  (let [{:keys [font style size color bullet-char]} formatting
+  (let [{:keys [font style size color bullet-char broken]} formatting
         bullet (str (or bullet-char (char 149)))
         bullet-length (context/get-font-string-width font style size bullet context)]
     (-> c-stream
@@ -115,7 +115,9 @@
         (set-color color)
         (new-line-by-font font size style context)
         (move-text-position-down (get-in formatting [:spacing :line :above]))
-        (draw-string bullet)
+        (#(if-not broken
+            (draw-string % bullet)
+            (move-text-position-right % bullet-length)))
         (move-text-position-right (* bullet-length 2))
         (write-line (first paragraph) context))
     (doseq [line (rest paragraph)]
