@@ -186,7 +186,7 @@
     (filter #(some #{(:tag %)} paragraph-tags)
             (zip/children
               (zip/xml-zip
-                (xml/parse-str xml-string))))))
+                (xml/parse-str xml-string :supporting-external-entities true))))))
 
 ;; ## Formatting
 ;;
@@ -238,9 +238,10 @@
   breaking algorithm."
   [line]
   (let [style (:style line)]
-    (map (fn [word]
-           {:style style :contents word})
-         (string/split (:contents line) #" "))))
+    (when-let [line-contents (:contents line)]
+      (map (fn [word]
+             {:style style :contents word})
+           (string/split (:contents line) #" ")))))
 
 (defn- paragraph->words
   [paragraph]
