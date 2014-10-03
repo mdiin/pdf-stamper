@@ -30,11 +30,9 @@
   ^{:pre [(some? template-uri)
           (schemas/valid-template? template-def)]}
   [template-def template-uri context]
-  (if template-def
-    (-> context
-        (assoc-in [:templates (:name template-def)] template-def)
-        (assoc-in [:templates (:name template-def) :uri] template-uri))
-    context))
+  (-> context
+      (assoc-in [:templates (:name template-def)] template-def)
+      (assoc-in [:templates (:name template-def) :uri] template-uri)))
 
 (defn get-template-document
   "The template file is loaded lazily, i.e. it is not until a page actually
