@@ -27,7 +27,8 @@
   When adding a template two things are needed: The template description,
   i.e. what goes where, and a locator for the PDF page to use with the
   template description. The template locator can be either a URL or a string."
-  ^{:pre [(schemas/valid-template? template-def)]}
+  ^{:pre [(some? template-uri)
+          (schemas/valid-template? template-def)]}
   [template-def template-uri context]
   (if template-def
     (-> context
