@@ -39,7 +39,7 @@
   requests to be written using the added template that it is read to memory."
   [template context]
   (let [file-uri (get-in context [:templates template :uri])]
-    (assert file-uri "file-uri is nil!")
+    (assert file-uri (str "file-uri is nil for template " template))
     (PDDocument/load file-uri)))
 
 (defn get-template-holes
