@@ -127,6 +127,13 @@
 ;;
 ;; pdf-stamper exists to fill data onto pages while following a pre-defined layout. This is where the magic happens.
 
+(defn- page-template-exists?
+  "Trying to stamp a page that requests a template not in the context
+  is an error. This is function is used to give a clear name to the
+  precondition of `fill-page`."
+  [page-data context]
+  (get-in context [:templates (:template page-data)]))
+
 (defn- fill-page
   "Every single page is passed through this function, which extracts
   the relevant template and description for the page data, adds it to
@@ -145,6 +152,8 @@
   recursive call to handle overflows. Otherwise handling large bodies of
   text could become a problem."
   [document page-data context]
+  (assert (page-template-exists? page-data context)
+          (str "No template " (:template page-data) " for page."))
   (let [template (:template page-data)
         template-overflow (context/get-template-overflow template context)
         template-holes (context/get-template-holes template context)
