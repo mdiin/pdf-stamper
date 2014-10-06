@@ -75,7 +75,9 @@
   Holes where type is `:text`, distinct from `:text-parsed` in that the text is printed in a single line and with only the formatting present
   in the `:paragraph` key of the `:format` map. Aditionally alignment of the text is controllable using the `:align` key: a map with the keys `:horizontal`
   and `:vertical`. The possible values for horizontal alignment are `:left`, `:right`, and `:center`; the possible values for vertical alignment are
-  `:top`, `:bottom`, and `:center`."
+  `:top`, `:bottom`, and `:center`.
+  
+  To keep the promise that there is not text outside the specified box, pdf-stamper automatically resizes lines that are too long."
   [document c-stream data context]
   (let [formatting (merge (:format data)
                           (select-keys data [:align :width :height]))

@@ -169,15 +169,31 @@
     (write-paragraph c-stream p-format paragraph context))
   c-stream)
 
+(defn- optimal-font-size
+  [font style start-size string max-width context]
+  (let [string-width (context/get-font-string-width font style start-size string context)]
+    (if (<= string-width max-width)
+      start-size
+      (letfn [(decrement-font-size
+                [[current-size current-width]]
+                [(dec current-size)
+                 (context/get-font-string-width font style (dec current-size) string context)])]
+        (let [[best-font-size _] (first
+                                   (drop-while #(> (second %) max-width)
+                                               (iterate decrement-font-size
+                                                        [start-size string-width])))]
+          best-font-size)))))
+
 (defn write-unparsed-line
   [c-stream line context]
   (let [{:keys [align width height font size style color] :as formatting} (:format line)
-        line-length (context/get-font-string-width font style size (:contents line) context)
-        line-height (context/get-font-height font style size context)]
+        optimal-font-size (optimal-font-size font style size (:contents line) width context)
+        line-length (context/get-font-string-width font style optimal-font-size (:contents line) context)
+        line-height (context/get-font-height font style optimal-font-size context)]
     (-> c-stream
         (add-padding-horizontal line-length formatting)
         (add-padding-vertical line-height formatting context)
-        (set-font font size style context)
+        (set-font font optimal-font-size style context)
         (set-color color)
         (draw-string (:contents line)))))
 
