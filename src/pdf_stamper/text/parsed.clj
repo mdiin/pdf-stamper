@@ -279,13 +279,17 @@
   "Break a paragraph into lines of `max-chars` length
   by splitting it into it's constituent parts (words)
   and reassembling with lines of the right length."
-  [paragraph max-chars]
-  (let [[_ last-line lines] (reduce (fn [acc w]
+  [paragraph formatting context]
+  (let [max-width (:width formatting)
+        {:keys [font style size]} formatting
+        space-width (context/get-font-string-width font style size " " context)
+        [_ last-line lines] (reduce (fn [acc w]
                                       (let [{:keys [contents]} w
                                             [current-length current-line lines] acc
-                                            word-length (inc (count contents)) ;; inc is for the missing space at the end of each word
+                                            word-length (+ (context/get-font-string-width font style size contents context)
+                                                           space-width)
                                             new-length (+ current-length word-length)]
-                                        (if (<= new-length max-chars)
+                                        (if (<= new-length max-width)
                                           [new-length (conj current-line w) lines]
                                           [word-length [w] (if (seq current-line)
                                                              (conj lines current-line)
@@ -351,7 +355,7 @@
                                              (select-keys paragraph [:elem :broken])
                                              (get formatting (:elem paragraph)))
                     line-chars (line-length actual-formatting context)
-                    paragraph-lines (break-paragraph paragraph line-chars)
+                    paragraph-lines (break-paragraph paragraph actual-formatting context)
                     paragraph-line-height (line-height actual-formatting context) ;; 1
                     number-of-lines (Math/floor
                                       (/ size-left paragraph-line-height)) ;; 2
