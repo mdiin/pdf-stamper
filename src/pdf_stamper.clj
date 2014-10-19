@@ -264,6 +264,7 @@
                                                   (context/embed-font document font style context))
                                                 context
                                                 (:fonts-to-embed context))
+            wrapped-pages nil
             open-documents (doall (map #(fill-page document % context-with-embedded-fonts) pages))]
         (.save document output)
         (doseq [doc (flatten open-documents)]
