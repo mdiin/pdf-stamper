@@ -8,8 +8,8 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/data.xml "0.0.8"] ;; XML parsing
                  [org.apache.pdfbox/pdfbox "1.8.7"] ;; PDF
-                 [potemkin "0.3.9"] ;; Code organisation
-                 [prismatic/schema "0.3.0"] ;; Template validations
+                 [potemkin "0.3.10"] ;; Code organisation
+                 [prismatic/schema "0.3.1"] ;; Template validations
                  ]
   :deploy-repositories [["releases" :clojars]])
 
