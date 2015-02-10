@@ -84,6 +84,8 @@
   (fn [content style]
     (let [new-style (-> style
                         (assoc :format elm-type)
+                        (assoc-in [:list :type] elm-type)
+                        (assoc-in [:list :numbering] (atom 0))
                         (update-in [:indent :level] (fnil inc 0)))]
       [(tokenize content new-style)
        (t-new-paragraph new-style)])))
@@ -93,8 +95,12 @@
 
 (defn- t-list-item
   [content style]
-  [(tokenize content style)
-   (t-new-line style)])
+  (let [_ (update-in style [:list :numbering] swap! inc)]
+    [(if (= (get-in style [:list :type]) :bullet)
+       (t-bullet style)
+       (t-number style @(get-in style [:list :numbering])))
+     (tokenize content style)
+     (t-new-line style)]))
 
 (defn- tokenize-xml*
   "Tokenize elm and use style as the base for it's tokens' styles."
