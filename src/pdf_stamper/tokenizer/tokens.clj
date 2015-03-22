@@ -5,21 +5,26 @@
 ;; word, or one of the special tokens.
 (defrecord Token [kind style word])
 
+(defn t-word
+  "Word token"
+  [style word]
+  (->Token ::word style word))
+
 ;; ### Special tokens
 (defn t-new-paragraph
   "New paragrah token."
   [style]
-  (->Token ::paragraph style nil))
+  (->Token ::new-paragraph style nil))
 
 (defn t-new-line 
   "New line token."
   [style]
-  (->Token ::line style nil))
+  (->Token ::new-line style nil))
 
 (defn t-new-page
   "New page token."
   [style]
-  (->Token ::page style nil))
+  (->Token ::new-page style nil))
 
 (defn t-bullet
   "Bullet token."

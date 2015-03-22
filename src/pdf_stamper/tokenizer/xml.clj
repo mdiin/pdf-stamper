@@ -32,6 +32,7 @@
 (def t-unordered-list (t-list-elm :bullet))
 (def t-ordered-list (t-list-elm :number))
 
+;; (t-bullet | t-number) -> [ts] -> t-new-line
 (defn- t-list-item
   [content style]
   (let [_ (update-in style [:list :numbering] swap! inc)]
@@ -41,11 +42,13 @@
      (tokenize content style)
      (token/t-new-line style)]))
 
+;; [ts]
 (defn- t-em
   [content style]
   (let [new-style (update-in style [:character-style] (fnil conj #{}) :italic)]
     [(tokenize content new-style)]))
 
+;; [ts]
 (defn- t-strong
   [content style]
   (let [new-style (update-in style [:character-style] (fnil conj #{}) :bold)]
