@@ -116,9 +116,10 @@
         (new-line-by-font font size style context)
         (move-text-position-down (get-in formatting [:spacing :line :above]))
         (#(if-not broken
-            (draw-string % bullet)
-            (move-text-position-right % bullet-length)))
-        (move-text-position-right (* bullet-length 2))
+            (do
+              (draw-string % bullet)
+              (move-text-position-right % (* bullet-length 2)))
+            (move-text-position-right % (* bullet-length 2))))
         (write-line (first paragraph) context))
     (doseq [line (rest paragraph)]
       (-> c-stream
