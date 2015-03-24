@@ -369,9 +369,7 @@
                    (if (seq paragraph)
                      (conj paragraphs [actual-formatting paragraph])
                      paragraphs)
-                   ;; TODO: There is a bug here, when a paragraph is exactly as long as the space given,
-                   ;; the following paragraph will be marked as `:broken`. See issue #31
-                   (conj overflow [(assoc actual-formatting :broken (if (= (count overflow) 0) true false)) o])] ;; 4
+                   (conj overflow [(assoc actual-formatting :broken (and (not-empty p) (not-empty o))) o])] ;; 4
                   [(- size-left 
                       (* paragraph-line-height (count paragraph))
                       (get-in actual-formatting [:spacing :paragraph :above])
