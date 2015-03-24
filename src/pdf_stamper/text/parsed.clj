@@ -279,9 +279,8 @@
   "Break a paragraph into lines of `max-chars` length
   by splitting it into it's constituent parts (words)
   and reassembling with lines of the right length."
-  [paragraph formatting context]
-  (let [max-width (:width formatting)
-        {:keys [font style size]} formatting
+  [paragraph formatting max-width context]
+  (let [{:keys [font style size]} formatting
         space-width (context/get-font-string-width font style size " " context)
         [_ last-line lines] (reduce (fn [acc w]
                                       (let [{:keys [contents]} w
@@ -316,11 +315,15 @@
   extended to support indenting only the first line of
   a paragraph."
   [formatting context]
-  (let [{:keys [font style width size]} formatting
+  (let [{:keys [font style width bullet-char elem size]} formatting
         font-width (context/get-average-font-width font style size context)
-        indent-width (get-in formatting [:indent :all])]
-    (- (/ width font-width)
-       (/ indent-width font-width))))
+        indent-width (get-in formatting [:indent :all])
+        bullet (str (or bullet-char (char 149)))
+        bullet-length (context/get-font-string-width font style size bullet context)
+        ]
+    (- width indent-width (if (= elem :bullet)
+                            (* bullet-length 3)
+                            0))))
 
 (defn- line-height
   [formatting context]
@@ -355,7 +358,7 @@
                                              (select-keys paragraph [:elem :broken])
                                              (get formatting (:elem paragraph)))
                     line-chars (line-length actual-formatting context)
-                    paragraph-lines (break-paragraph paragraph actual-formatting context)
+                    paragraph-lines (break-paragraph paragraph actual-formatting line-chars context)
                     paragraph-line-height (line-height actual-formatting context) ;; 1
                     number-of-lines (Math/floor
                                       (/ size-left paragraph-line-height)) ;; 2
