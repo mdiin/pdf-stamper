@@ -76,6 +76,7 @@
   (let [aspect-ratio (get data :aspect :preserve)
         image-quality (get data :quality 0.75)
         image (PDJpeg. document (get-in data [:contents :image]) image-quality)]
+    (assert image "Image must be present in hole contents.")
     (condp = aspect-ratio
       :preserve (draw-image-preserve-aspect c-stream image data)
       :fit (draw-image c-stream image data))))
