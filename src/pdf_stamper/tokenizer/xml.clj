@@ -25,7 +25,7 @@
                         (assoc :format elm-type)
                         (assoc-in [:list :type] elm-type)
                         (assoc-in [:list :numbering] (atom 0))
-                        (update-in [:indent :level] (fnil inc 0)))]
+                        (update-in [:list :indent :level] (fnil inc 0)))]
       [(tokenize content new-style)
        (token/t-new-paragraph new-style)])))
 
