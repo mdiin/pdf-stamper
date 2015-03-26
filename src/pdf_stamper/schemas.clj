@@ -95,3 +95,22 @@
   [template]
   (s/check Template template))
 
+(def ImageLocation
+  {s/Keyword {:contents {:image java.awt.image.BufferedImage}}})
+
+(def TextLocation
+  {s/Keyword {:contents {:text s/Str}}})
+
+(def Location
+  (s/either
+    ImageLocation
+    TextLocation))
+
+(def Data
+  {:template s/Keyword
+   :locations [Location]})
+
+(defn valid-data?
+  [data]
+  (not (s/check Data data)))
+
