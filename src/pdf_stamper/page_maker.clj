@@ -1,8 +1,12 @@
 (ns pdf-stamper.page-maker
   (:require
+    [clojure.data.xml :as xml]
     [clojure.test.check :as tc]
     [clojure.test.check.generators :as gen]
-    [clojure.test.check.properties :as prop]))
+    [clojure.test.check.properties :as prop]
+    
+    [pdf-stamper.tokenizer :refer [tokenize]]
+    [pdf-stamper.tokenizer.xml :as xml-tokenizer]))
 
 ;; The general algorithm for building pages:
 ;;
@@ -41,6 +45,13 @@
 ;;                       | Pages |
 ;;                       \-------/
 ;;
+
+(defn- tokenize-xml-contents
+  [location]
+  (let [[loc-name content-map] (first location)]
+    (if-let [xml-str (get-in content-map [:contents :text])]
+      (assoc-in location [loc-name :contents :text] (flatten (tokenize (xml/parse-str xml-str))))
+      location)))
 
 (defn- page-template-exists?
   "Trying to stamp a page that requests a template not in the context
