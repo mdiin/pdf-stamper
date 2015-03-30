@@ -46,12 +46,29 @@
 ;;                       \-------/
 ;;
 
+;; Build data:
+;;
+;; 1. Tokenize all text holes in all pieces of data
+;;
+
+(def test-data
+  {:locations {:a {:contents {:image nil}}
+               :b {:contents {:text "<bbb><p>abc</p></bbb>"}}}})
+
 (defn- tokenize-xml-contents
   [location]
-  (let [[loc-name content-map] (first location)]
+  (let [[loc-name content-map] location]
     (if-let [xml-str (get-in content-map [:contents :text])]
-      (assoc-in location [loc-name :contents :text] (flatten (tokenize (xml/parse-str xml-str))))
-      location)))
+      {loc-name (update-in content-map [:contents :text] (comp flatten tokenize xml/parse-str))}
+      {loc-name content-map})))
+
+(defn- process-one-data
+  [data]
+  (update-in data [:locations] #(into {} (map tokenize-xml-contents (seq %)))))
+
+(defn- process-all-data
+  [ds]
+  (map process-one-data ds))
 
 (defn- page-template-exists?
   "Trying to stamp a page that requests a template not in the context
