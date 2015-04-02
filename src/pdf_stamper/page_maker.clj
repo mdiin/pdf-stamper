@@ -6,7 +6,8 @@
     [clojure.test.check.properties :as prop]
     
     [pdf-stamper.tokenizer :refer [tokenize]]
-    [pdf-stamper.tokenizer.xml :as xml-tokenizer]))
+    [pdf-stamper.tokenizer.xml :as xml-tokenizer]
+    [pdf-stamper.tokenizer.tokens :as t]))
 
 ;; The general algorithm for building pages:
 ;;
@@ -69,6 +70,45 @@
 (defn- process-all-data
   [ds]
   (map process-one-data ds))
+
+;; Fill holes in page, respecting space constraints
+;;
+;; 3-4c
+;;
+
+(defn split-tokens
+  [tokens {:keys [hheight hwidth]} formats context]
+  (let [init-state {:selected []
+                    :remaining tokens
+                    :sheight 0
+                    :swidth 0}]
+    (loop [{:as acc :keys [selected remaining sheight swidth]} init-state]
+      (if-let [token (first remaining)]
+        (cond
+          ;; There is room for another token on the line
+          (<= (+ swidth (t/width token formats context)) hwidth)
+          (recur
+            (-> acc
+                (update-in [:swidth] + (t/width token formats context))
+                (update-in [:selected] conj token)
+                (update-in [:remaining] (partial drop 1))))
+
+          ;; There is no room on the line but room for another line
+          (and
+            (> (+ swidth (t/width token formats context)) hwidth)
+            (<= (+ sheight (t/height token formats context)) hheight))
+          (recur
+            (-> acc
+                (update-in [:sheight] + (t/height token formats context))
+                (update-in [:swidth] (constantly (t/width token formats context)))
+                (update-in [:selected] conj (t/t-new-line (:style token)))
+                (update-in [:selected] conj token)
+                (update-in [:remaining] (partial drop 1))))
+
+          ;; There is neither room for the token on the line nor for another line
+          :default
+          (select-keys acc [:selected :remaining]))
+        (select-keys acc [:selected :remaining])))))
 
 (defn- page-template-exists?
   "Trying to stamp a page that requests a template not in the context

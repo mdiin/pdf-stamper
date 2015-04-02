@@ -1,4 +1,6 @@
-(ns pdf-stamper.tokenizer.tokens)
+(ns pdf-stamper.tokenizer.tokens
+  (:require
+    [pdf-stamper.context :as context]))
 
 ;; ## Tokens
 ;; A token is the combination of a single word plus any styling of that
@@ -35,4 +37,31 @@
   "Number token."
   [style n]
   (->Token ::number style n))
+
+;; ## Token functions
+;;
+;; Deriving information from tokens, such as a tokens width and height.
+
+(defn width
+  ^{:pre [(not (nil? token))]}
+  [token formats context]
+  (let [token-style (:style token)
+        formatting (get formats (:format token-style))]
+    (context/get-font-string-width
+      (:font formatting)
+      (:character-style token-style)
+      (:size formatting)
+      (:word token)
+      context)))
+
+(defn height
+  ^{:pre [(not (nil? token))]}
+  [token formats context]
+  (let [token-style (:style token)
+        formatting (get formats (:format token-style))]
+    (context/get-font-height
+      (:font formatting)
+      (:character-style token-style)
+      (:size formatting)
+      context)))
 

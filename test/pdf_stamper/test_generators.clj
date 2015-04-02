@@ -133,3 +133,29 @@
 (def tokens-gen
   (gen/vector (gen/frequency [[1 list-gen] [7 (word-token-gen nil)] [2 special-token-gen]])))
 
+;;;
+;; NEW GENERATORS
+;;;
+
+(defn- base-style
+  ^{:pre [(not-empty formats)
+          (not-empty character-styles)]}
+  [formats character-styles]
+  (gen/fmap (partial into {})
+            (gen/tuple
+              (gen/tuple
+                (gen/elements [:format]) (gen/elements formats))
+              (gen/tuple
+                (gen/return :character-style) (gen/fmap
+                                                (partial conj #{})
+                                                (gen/elements character-styles))))))
+
+(defn token-word
+  [format]
+  (gen/fmap (partial apply t/t-word)
+            (gen/tuple
+              (gen/frequency
+                [[9 (base-style [format] [:regular])]
+                 [1 (base-style [format] [:bold :italic])]])
+              (gen/not-empty gen/string-alphanumeric))))
+
