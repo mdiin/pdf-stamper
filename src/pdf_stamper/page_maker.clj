@@ -76,8 +76,40 @@
 ;; 3-4c
 ;;
 
-(defn split-tokens
-  [tokens {:keys [hheight hwidth]} formats context]
+(defmulti select-token (fn [{:keys [remaining]}] (:kind (first remaining))))
+
+(defmethod select-token :pdf-stamper.tokenizer.tokens/word
+  [{:as acc :keys [selected remaining sheight swidth]} {:keys [hheight hwidth]} formats]
+  (cond
+    ;; There is room for another token on the line
+    (and
+      (<= (+ swidth (t/width token formats context)) hwidth)
+      (<= (+ sheight (t/height token formats context)) hheight))
+    {:recur true
+     :acc (-> acc
+              (update-in [:swidth] + (t/width token formats context))
+              (update-in [:selected] conj token)
+              (update-in [:remaining] (partial drop 1)))}
+
+    ;; There is no room on the line but room for another line
+    (and
+      (> (+ swidth (t/width token formats context)) hwidth)
+      (<= (+ sheight (* (t/height token formats context) 2)) hheight))
+    {:recur true
+     :acc (-> acc
+              (update-in [:sheight] + (t/height token formats context))
+              (update-in [:swidth] (constantly (t/width token formats context)))
+              (update-in [:selected] conj (t/t-new-line (:style token)))
+              (update-in [:selected] conj token)
+              (update-in [:remaining] (partial drop 1)))}
+
+    ;; There is neither room for the token on the line nor for another line
+    :default
+    {:recur false
+     :acc (select-keys acc [:selected :remaining])}))
+
+(defn- split-tokens
+  [tokens {:as dimensions :keys [hheight hwidth]} formats context]
   (let [init-state {:selected []
                     :remaining tokens
                     :sheight 0
@@ -86,7 +118,9 @@
       (if-let [token (first remaining)]
         (cond
           ;; There is room for another token on the line
-          (<= (+ swidth (t/width token formats context)) hwidth)
+          (and
+            (<= (+ swidth (t/width token formats context)) hwidth)
+            (<= (+ sheight (t/height token formats context)) hheight))
           (recur
             (-> acc
                 (update-in [:swidth] + (t/width token formats context))
@@ -96,7 +130,7 @@
           ;; There is no room on the line but room for another line
           (and
             (> (+ swidth (t/width token formats context)) hwidth)
-            (<= (+ sheight (t/height token formats context)) hheight))
+            (<= (+ sheight (* (t/height token formats context) 2)) hheight))
           (recur
             (-> acc
                 (update-in [:sheight] + (t/height token formats context))

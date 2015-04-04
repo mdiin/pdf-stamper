@@ -1,4 +1,4 @@
-(ns pdf-stamper.core-test
+(ns pdf-stamper.page-maker
   (:require
     [clojure.test :refer :all]
     [clojure.test.check :as tc]
@@ -7,10 +7,9 @@
     [clojure.test.check.clojure-test :refer [defspec]]
 
     [pdf-stamper.test-generators :as pdf-gen]
-    
+
     [pdf-stamper.tokenizer.tokens :as t]
-    [pdf-stamper.context :as context]
-    [pdf-stamper.page-maker :as pm]))
+    [pdf-stamper.context :as context]))
 
 (def splitting-tokens-honours-max-line-width-prop
   (prop/for-all
@@ -24,7 +23,7 @@
     (let [formats {:paragraph {:font :times
                                :size 12}}
           context context/base-context
-          {:keys [selected remaining]} (pm/split-tokens
+          {:keys [selected remaining]} (split-tokens
                                          tokens
                                          hole-dimensions
                                          formats
@@ -62,7 +61,7 @@
     (let [formats {:paragraph {:font :times
                                :size 12}}
           context context/base-context
-          {:keys [selected remaining]} (pm/split-tokens
+          {:keys [selected remaining]} (split-tokens
                                          tokens
                                          hole-dimensions
                                          formats
