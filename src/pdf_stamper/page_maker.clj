@@ -5,6 +5,7 @@
     [clojure.test.check.generators :as gen]
     [clojure.test.check.properties :as prop]
     
+    [pdf-stamper.protocols :as p :refer [SelectToken]]
     [pdf-stamper.tokenizer :refer [tokenize]]
     [pdf-stamper.tokenizer.xml :as xml-tokenizer]
     [pdf-stamper.tokenizer.tokens :as t]))
@@ -76,73 +77,45 @@
 ;; 3-4c
 ;;
 
-(defmulti select-token (fn [{:keys [remaining]}] (:kind (first remaining))))
+(extend-protocol p/SelectToken
+  pdf_stamper.tokenizer.tokens.Word
+  (select-token [token {:as remaining-space :keys [width height]} formats context]
+    (cond
+      ;; Room for one more on the line
+      (and
+        (<= (p/width token formats context) width)
+        (<= (p/height token formats context) height))
+      [token]
 
-(defmethod select-token :pdf-stamper.tokenizer.tokens/word
-  [{:as acc :keys [selected remaining sheight swidth]} {:keys [hheight hwidth]} formats]
-  (cond
-    ;; There is room for another token on the line
-    (and
-      (<= (+ swidth (t/width token formats context)) hwidth)
-      (<= (+ sheight (t/height token formats context)) hheight))
-    {:recur true
-     :acc (-> acc
-              (update-in [:swidth] + (t/width token formats context))
-              (update-in [:selected] conj token)
-              (update-in [:remaining] (partial drop 1)))}
+      ;; No more room on line, but room for one more line
+      (and
+        (> (p/width token formats context) width)
+        (<= (* (p/height token formats context) 2) height))
+      [(t/->NewLine (:style token)) token]
+      
+      :default
+      nil))
+  
+  nil
+  (select-token [_ _ _ _] nil))
 
-    ;; There is no room on the line but room for another line
-    (and
-      (> (+ swidth (t/width token formats context)) hwidth)
-      (<= (+ sheight (* (t/height token formats context) 2)) hheight))
-    {:recur true
-     :acc (-> acc
-              (update-in [:sheight] + (t/height token formats context))
-              (update-in [:swidth] (constantly (t/width token formats context)))
-              (update-in [:selected] conj (t/t-new-line (:style token)))
-              (update-in [:selected] conj token)
-              (update-in [:remaining] (partial drop 1)))}
-
-    ;; There is neither room for the token on the line nor for another line
-    :default
-    {:recur false
-     :acc (select-keys acc [:selected :remaining])}))
-
-(defn- split-tokens
+(defn split-tokens
   [tokens {:as dimensions :keys [hheight hwidth]} formats context]
   (let [init-state {:selected []
                     :remaining tokens
                     :sheight 0
                     :swidth 0}]
     (loop [{:as acc :keys [selected remaining sheight swidth]} init-state]
-      (if-let [token (first remaining)]
-        (cond
-          ;; There is room for another token on the line
-          (and
-            (<= (+ swidth (t/width token formats context)) hwidth)
-            (<= (+ sheight (t/height token formats context)) hheight))
+      (let [remaining-space {:width (- hwidth swidth)
+                             :height (- hheight sheight)}]
+        (if-let [tokens (p/select-token (first remaining) remaining-space formats context)]
           (recur
             (-> acc
-                (update-in [:swidth] + (t/width token formats context))
-                (update-in [:selected] conj token)
-                (update-in [:remaining] (partial drop 1))))
-
-          ;; There is no room on the line but room for another line
-          (and
-            (> (+ swidth (t/width token formats context)) hwidth)
-            (<= (+ sheight (* (t/height token formats context) 2)) hheight))
-          (recur
-            (-> acc
-                (update-in [:sheight] + (t/height token formats context))
-                (update-in [:swidth] (constantly (t/width token formats context)))
-                (update-in [:selected] conj (t/t-new-line (:style token)))
-                (update-in [:selected] conj token)
-                (update-in [:remaining] (partial drop 1))))
-
-          ;; There is neither room for the token on the line nor for another line
-          :default
-          (select-keys acc [:selected :remaining]))
-        (select-keys acc [:selected :remaining])))))
+                (update-in [:selected] into tokens)
+                (update-in [:remaining] (partial drop 1))
+                (update-in [:swidth] + (p/width (first remaining) formats context))
+                (update-in [:sheight] (constantly 0))))
+          (select-keys acc [:selected :remaining]))))))
 
 (defn- page-template-exists?
   "Trying to stamp a page that requests a template not in the context

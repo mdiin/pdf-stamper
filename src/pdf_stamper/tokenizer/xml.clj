@@ -11,7 +11,7 @@
   (fn [content style]
     (let [new-style (assoc style :format elm-type)]
       [(tokenize content new-style)
-       (token/t-new-paragraph new-style)])))
+       (token/->NewParagraph new-style)])))
 
 (def t-paragraph (t-paragraph-elm :paragraph))
 (def t-head-1 (t-paragraph-elm :head-1))
@@ -27,7 +27,7 @@
                         (assoc-in [:list :numbering] (atom 0))
                         (update-in [:list :indent :level] (fnil inc 0)))]
       [(tokenize content new-style)
-       (token/t-new-paragraph new-style)])))
+       (token/->NewParagraph new-style)])))
 
 (def t-unordered-list (t-list-elm :bullet))
 (def t-ordered-list (t-list-elm :number))
@@ -37,10 +37,10 @@
   [content style]
   (let [_ (update-in style [:list :numbering] swap! inc)]
     [(if (= (get-in style [:list :type]) :bullet)
-       (token/t-bullet style)
-       (token/t-number style @(get-in style [:list :numbering])))
+       (token/->ListBullet style)
+       (token/->ListNumber style @(get-in style [:list :numbering])))
      (tokenize content style)
-     (token/t-new-line style)]))
+     (token/->NewLine style)]))
 
 ;; [ts]
 (defn- t-em
@@ -67,7 +67,7 @@
      :ul (t-unordered-list (:content elm-or-str) style)
      :ol (t-ordered-list (:content elm-or-str) style)
      :li (t-list-item (:content elm-or-str) style)
-     :br [(token/t-new-line style)]
+     :br [(token/->NewLine style)]
      :em (t-em (:content elm-or-str) style)
      :i (t-em (:content elm-or-str) style)
      :strong (t-strong (:content elm-or-str) style)

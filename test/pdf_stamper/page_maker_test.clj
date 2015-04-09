@@ -1,4 +1,4 @@
-(ns pdf-stamper.page-maker
+(ns pdf-stamper.page-maker-test
   (:require
     [clojure.test :refer :all]
     [clojure.test.check :as tc]
@@ -8,6 +8,8 @@
 
     [pdf-stamper.test-generators :as pdf-gen]
 
+    [pdf-stamper.page-maker :as pm]
+    [pdf-stamper.protocols :as p]
     [pdf-stamper.tokenizer.tokens :as t]
     [pdf-stamper.context :as context]))
 
@@ -23,21 +25,21 @@
     (let [formats {:paragraph {:font :times
                                :size 12}}
           context context/base-context
-          {:keys [selected remaining]} (split-tokens
+          {:keys [selected remaining]} (pm/split-tokens
                                          tokens
                                          hole-dimensions
                                          formats
                                          context)
 
           ;; Used for testing the property:
-          parts (partition-by :kind selected)
+          parts (partition-by type selected)
           words (map
                   #(filter
-                     (fn [t] (= (:kind t) :pdf-stamper.tokenizer.tokens/word))
+                     (fn [token] (instance? pdf_stamper.tokenizer.tokens.Word token))
                      %)
                   parts)
           line-width (fn [tokens]
-                       (reduce + 0 (map #(t/width % formats context) tokens)))
+                       (reduce + 0 (map #(p/width % formats context) tokens)))
           line-widths (map
                         #(vector (line-width %) (count %))
                         words)]
@@ -61,21 +63,21 @@
     (let [formats {:paragraph {:font :times
                                :size 12}}
           context context/base-context
-          {:keys [selected remaining]} (split-tokens
+          {:keys [selected remaining]} (pm/split-tokens
                                          tokens
                                          hole-dimensions
                                          formats
                                          context)
 
           ;; Used for testing the property:
-          parts (partition-by :kind selected)
+          parts (partition-by type selected)
           new-lines (mapcat
                       #(filter
-                         (fn [t] (= (:kind t) :pdf-stamper.tokenizer.tokens/new-line))
+                         (fn [token] (instance? pdf_stamper.tokenizer.tokens.NewLine token))
                          %)
                       parts)
           line-height (if (first selected)
-                        (t/height (first selected) formats context)
+                        (p/height (first selected) formats context)
                         0)
           lines-height (* line-height (inc (count new-lines)))]
       (<= lines-height (:hheight hole-dimensions)))))

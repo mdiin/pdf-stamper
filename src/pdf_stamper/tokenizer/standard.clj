@@ -9,7 +9,7 @@
 
 (defn- tokenize-str*
   [s style]
-  (map (partial token/t-word style) (clojure.string/split s #" ")))
+  (map (partial token/->Word style) (clojure.string/split s #" ")))
 
 (extend-type java.lang.String
   Tokenizable
