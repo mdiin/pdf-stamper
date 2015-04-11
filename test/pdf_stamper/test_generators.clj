@@ -159,3 +159,17 @@
                  [1 (base-style [format] [:bold :italic])]])
               (gen/not-empty gen/string-alphanumeric))))
 
+(def spacing
+  (gen/fmap (partial into {})
+            (gen/tuple
+              (gen/tuple
+                (gen/return :above) gen/nat)
+              (gen/tuple
+                (gen/return :below) gen/nat))))
+
+(def indent
+  (gen/fmap (partial into {})
+            (gen/tuple
+              (gen/tuple
+                (gen/return :all) gen/nat))))
+

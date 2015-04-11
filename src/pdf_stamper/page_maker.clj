@@ -114,7 +114,8 @@
                 (update-in [:selected] into tokens)
                 (update-in [:remaining] (partial drop 1))
                 (update-in [:swidth] + (p/width (first remaining) formats context))
-                (update-in [:sheight] (constantly 0))))
+                (update-in [:sheight] (constantly 0)) ;; TODO: Increment if tokens contains something that builds a new line-like, e.g. paragraph, new line, new page
+                ))
           (select-keys acc [:selected :remaining]))))))
 
 (defn- page-template-exists?

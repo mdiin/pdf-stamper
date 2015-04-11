@@ -21,9 +21,15 @@
                                  (gen/tuple
                                    (gen/return :hheight) (gen/choose 1 200))
                                  (gen/tuple
-                                   (gen/return :hwidth) (gen/choose 1 200))))]
+                                   (gen/return :hwidth) (gen/choose 1 200))))
+     line-spacing pdf-gen/spacing
+     paragraph-spacing pdf-gen/spacing
+     indent pdf-gen/indent]
     (let [formats {:paragraph {:font :times
-                               :size 12}}
+                               :size 12
+                               :spacing {:line line-spacing
+                                         :paragraph paragraph-spacing}
+                               :indent indent}}
           context context/base-context
           {:keys [selected remaining]} (pm/split-tokens
                                          tokens
@@ -59,9 +65,15 @@
                                  (gen/tuple
                                    (gen/return :hheight) (gen/choose 1 200))
                                  (gen/tuple
-                                   (gen/return :hwidth) (gen/choose 1 200))))]
+                                   (gen/return :hwidth) (gen/choose 1 200))))
+     line-spacing pdf-gen/spacing
+     paragraph-spacing pdf-gen/spacing
+     indent pdf-gen/indent]
     (let [formats {:paragraph {:font :times
-                               :size 12}}
+                               :size 12
+                               :spacing {:line line-spacing
+                                         :paragraph paragraph-spacing}
+                               :indent indent}}
           context context/base-context
           {:keys [selected remaining]} (pm/split-tokens
                                          tokens
