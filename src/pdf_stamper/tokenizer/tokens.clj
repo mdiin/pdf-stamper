@@ -10,11 +10,13 @@
 (defn- single-line-height
   [token formats context]
   (let [formatting (get formats (:format (:style token)))]
-    (context/get-font-height
-      (:font formatting)
-      (:character-style (:style token))
-      (:size formatting)
-      context)))
+    (+ (context/get-font-height
+         (:font formatting)
+         (:character-style (:style token))
+         (:size formatting)
+         context)
+       (get-in formatting [:spacing :line :above])
+       (get-in formatting [:spacing :line :below]))))
 
 (defrecord Word [style word]
   Token
