@@ -95,9 +95,32 @@
       
       :default
       nil))
+
+  (horizontal-increase? [_] false)
+
+  pdf_stamper.tokenizer.tokens.NewLine
+  (select-token [token {:as remaining-space :keys [width height]} formats context]
+    (cond
+      ;; Room for one moew line
+      (<= (* (p/height token formats context) 2) height)
+      [token]
+      
+      :default
+      nil))
+
+  (horizontal-increase? [_] true)
   
   nil
-  (select-token [_ _ _ _] nil))
+  (select-token [_ _ _ _] nil)
+  (horizontal-increase? [_] false))
+
+(defn- maybe-inc-height
+  [orig-sheight tokens formats context]
+  (let [height-increase-tokens (filter p/horizontal-increase? tokens)
+        total-increase (reduce + 0 (map
+                                     #(p/height % formats context)
+                                     height-increase-tokens))]
+    (+ orig-sheight total-increase)))
 
 (defn split-tokens
   [tokens {:as dimensions :keys [hheight hwidth]} formats context]
@@ -114,8 +137,7 @@
                 (update-in [:selected] into tokens)
                 (update-in [:remaining] (partial drop 1))
                 (update-in [:swidth] + (p/width (first remaining) formats context))
-                (update-in [:sheight] (constantly 0)) ;; TODO: Increment if tokens contains something that builds a new line-like, e.g. paragraph, new line, new page
-                ))
+                (update-in [:sheight] maybe-inc-height tokens formats context)))
           (select-keys acc [:selected :remaining]))))))
 
 (defn- page-template-exists?

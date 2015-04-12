@@ -9,5 +9,6 @@
 
 (defprotocol SelectToken
   "Decision protocol: Is there room for `token` or not?"
-  (select-token [token remaining-space formats context]))
+  (select-token [token remaining-space formats context])
+  (horizontal-increase? [token]))
 
