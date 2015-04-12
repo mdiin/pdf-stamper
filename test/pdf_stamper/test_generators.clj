@@ -159,6 +159,30 @@
                  [1 (base-style [format] [:bold :italic])]])
               (gen/not-empty gen/string-alphanumeric))))
 
+(defn token-newline
+  [format]
+  (gen/bind (base-style [format] [:regular])
+            (fn [style]
+              (gen/return (t/->NewLine style)))))
+
+(defn token-newparagraph
+  [format]
+  (gen/bind (base-style [format] [:regular])
+            (fn [style]
+              (gen/return (t/->NewParagraph style)))))
+
+(defn paragraph-element-token
+  [format]
+  (gen/frequency
+    [[9 (token-word format)]
+     [1 (token-newline format)]]))
+
+(defn text-element-token
+  [format]
+  (gen/frequency
+    [[9 (paragraph-element-token format)]
+     [1 (token-newparagraph format)]]))
+
 (def spacing
   (gen/fmap (partial into {})
             (gen/tuple

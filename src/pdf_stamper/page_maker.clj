@@ -101,8 +101,20 @@
   pdf_stamper.tokenizer.tokens.NewLine
   (select-token [token {:as remaining-space :keys [width height]} formats context]
     (cond
-      ;; Room for one moew line
-      (<= (* (p/height token formats context) 2) height)
+      ;; Room for one more line
+      (<= (p/height token formats context) height)
+      [token]
+      
+      :default
+      nil))
+
+  (horizontal-increase? [_] true)
+
+  pdf_stamper.tokenizer.tokens.NewParagraph
+  (select-token [token {:as remaining-space :keys [width height]} formats context]
+    (cond
+      ;; Room for a new paragraph
+      (<= (p/height token formats context) height)
       [token]
       
       :default
@@ -124,9 +136,10 @@
 
 (defn split-tokens
   [tokens {:as dimensions :keys [hheight hwidth]} formats context]
-  (let [init-state {:selected []
+  (let [first-token (first tokens)
+        init-state {:selected []
                     :remaining tokens
-                    :sheight 0
+                    :sheight (if first-token (p/height first-token formats context) 0)
                     :swidth 0}]
     (loop [{:as acc :keys [selected remaining sheight swidth]} init-state]
       (let [remaining-space {:width (- hwidth swidth)

@@ -18,6 +18,13 @@
        (get-in formatting [:spacing :line :above])
        (get-in formatting [:spacing :line :below]))))
 
+(defn- paragraph-line-height
+  [token formats context]
+  (let [formatting (get formats (:format (:style token)))]
+    (+ (single-line-height token formats context)
+       (get-in formatting [:spacing :paragraph :above])
+       (get-in formatting [:spacing :paragraph :below]))))
+
 (defrecord Word [style word]
   Token
   (height [this formats context]
@@ -40,7 +47,14 @@
   (width [this formats context]
     0.0))
 
-(defrecord NewParagraph [style])
+(defrecord NewParagraph [style]
+  Token
+  (height [this formats context]
+    (paragraph-line-height this formats context))
+  
+  (width [this formats context]
+    0.0))
+
 (defrecord NewPage [style])
 (defrecord ListBullet [style])
 (defrecord ListNumber [style number])

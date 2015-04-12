@@ -15,13 +15,13 @@
 
 (def splitting-tokens-honours-max-line-width-prop
   (prop/for-all
-    [tokens (gen/vector (pdf-gen/token-word :paragraph))
+    [tokens (gen/vector (pdf-gen/text-element-token :paragraph))
      hole-dimensions (gen/fmap (partial into {})
                                (gen/tuple
                                  (gen/tuple
-                                   (gen/return :hheight) (gen/choose 1 200))
+                                   (gen/return :hheight) (gen/choose 1 1000))
                                  (gen/tuple
-                                   (gen/return :hwidth) (gen/choose 1 200))))
+                                   (gen/return :hwidth) (gen/choose 1 1000))))
      line-spacing pdf-gen/spacing
      paragraph-spacing pdf-gen/spacing
      indent pdf-gen/indent]
@@ -59,13 +59,13 @@
 
 (def splitting-tokens-honours-max-height-prop
   (prop/for-all
-    [tokens (gen/vector (pdf-gen/token-word :paragraph))
+    [tokens (gen/vector (pdf-gen/text-element-token :paragraph))
      hole-dimensions (gen/fmap (partial into {})
                                (gen/tuple
                                  (gen/tuple
-                                   (gen/return :hheight) (gen/choose 1 200))
+                                   (gen/return :hheight) (gen/choose 1 1000))
                                  (gen/tuple
-                                   (gen/return :hwidth) (gen/choose 1 200))))
+                                   (gen/return :hwidth) (gen/choose 1 1000))))
      line-spacing pdf-gen/spacing
      paragraph-spacing pdf-gen/spacing
      indent pdf-gen/indent]
@@ -83,15 +83,16 @@
 
           ;; Used for testing the property:
           parts (partition-by type selected)
-          new-lines (mapcat
-                      #(filter
-                         (fn [token] (instance? pdf_stamper.tokenizer.tokens.NewLine token))
-                         %)
-                      parts)
-          line-height (if (first selected)
-                        (p/height (first selected) formats context)
-                        0)
-          lines-height (* line-height (inc (count new-lines)))]
+          horizontal-increases (mapcat #(filter p/horizontal-increase? %) parts)
+          first-token-height (if (first selected)
+                               (p/height (first selected) formats context)
+                               0)
+          lines-height (reduce
+                         (fn [acc token]
+                           (+ acc (p/height token formats context)))
+                         first-token-height
+                         horizontal-increases)
+          ]
       (<= lines-height (:hheight hole-dimensions)))))
 
 (defspec splitting-tokens-honours-max-line-width
