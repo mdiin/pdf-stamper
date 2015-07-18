@@ -7,7 +7,7 @@
         :url "https://github.com/mdiin/pdf-stamper"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/data.xml "0.0.8"] ;; XML parsing
-                 [org.apache.pdfbox/pdfbox "1.8.7"] ;; PDF
+                 [org.apache.pdfbox/pdfbox "1.8.9"] ;; PDF
                  [potemkin "0.3.10"] ;; Code organisation
                  [prismatic/schema "1.0.4"] ;; Template validations
                  [org.clojure/test.check "0.7.0"]
