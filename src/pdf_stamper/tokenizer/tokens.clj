@@ -55,7 +55,15 @@
   (width [this formats context]
     0.0))
 
-(defrecord NewPage [style])
+(defrecord NewPage [style]
+  Token
+  (height [this formats context]
+    ;; A NewPage token always fills any remaining space on the page.
+    Double/POSITIVE_INFINITY)
+  
+  (width [this formats context]
+    0.0))
+
 (defrecord ListBullet [style])
 (defrecord ListNumber [style number])
 

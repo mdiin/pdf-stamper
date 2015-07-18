@@ -1,9 +1,6 @@
 (ns pdf-stamper.page-maker
   (:require
     [clojure.data.xml :as xml]
-    [clojure.test.check :as tc]
-    [clojure.test.check.generators :as gen]
-    [clojure.test.check.properties :as prop]
     
     [pdf-stamper.protocols :as p :refer [SelectToken]]
     [pdf-stamper.tokenizer :refer [tokenize]]
@@ -121,6 +118,13 @@
       nil))
 
   (horizontal-increase? [_] true)
+
+  pdf_stamper.tokenizer.tokens.NewPage
+  (select-token [token {:as remaining-space :keys [width height]} formats context]
+    ;; Always room for a page break...
+    [token])
+
+  (horizontal-increase? [_] true)
   
   nil
   (select-token [_ _ _ _] nil)
@@ -128,14 +132,24 @@
 
 (defn- maybe-inc-height
   [orig-sheight tokens formats context]
+  {:post [(number? %)]}
   (let [height-increase-tokens (filter p/horizontal-increase? tokens)
         total-increase (reduce + 0 (map
                                      #(p/height % formats context)
                                      height-increase-tokens))]
     (+ orig-sheight total-increase)))
 
+(defn- all-tokens
+  [tokens]
+  (reduce
+    #(and %1 %2)
+    true
+    (map #(satisfies? p/SelectToken %) tokens)))
+
 (defn split-tokens
   [tokens {:as dimensions :keys [hheight hwidth]} formats context]
+  {:post [(all-tokens (:selected %))
+          (all-tokens (:remaining %))]}
   (let [first-token (first tokens)
         init-state {:selected []
                     :remaining tokens

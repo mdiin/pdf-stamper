@@ -165,6 +165,12 @@
             (fn [style]
               (gen/return (t/->NewLine style)))))
 
+(defn token-newpage
+  [format]
+  (gen/bind (base-style [format] [:regular])
+            (fn [style]
+              (gen/return (t/->NewPage style)))))
+
 (defn token-newparagraph
   [format]
   (gen/bind (base-style [format] [:regular])
@@ -180,8 +186,10 @@
 (defn text-element-token
   [format]
   (gen/frequency
-    [[9 (paragraph-element-token format)]
-     [1 (token-newparagraph format)]]))
+    [[7 (paragraph-element-token format)]
+     [2 (token-newparagraph format)]
+     [1 (token-newpage format)]
+     ]))
 
 (def spacing
   (gen/fmap (partial into {})

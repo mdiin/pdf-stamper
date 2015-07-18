@@ -93,7 +93,11 @@
                          first-token-height
                          horizontal-increases)
           ]
-      (<= lines-height (:hheight hole-dimensions)))))
+      ;; Double/POSITIVE_INFINITY means that the hole is filled
+      ;; entirely, e.g. from a page break.
+      (or (= Double/POSITIVE_INFINITY lines-height)
+          (<= lines-height (:hheight hole-dimensions)))
+      )))
 
 (defspec splitting-tokens-honours-max-line-width
   100
