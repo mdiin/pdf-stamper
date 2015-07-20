@@ -183,13 +183,30 @@
     [[9 (token-word format)]
      [1 (token-newline format)]]))
 
+(defn paragraph
+  [format]
+  (gen/bind (base-style [format] [:regular])
+            (fn [style]
+              (gen/bind (gen/vector (paragraph-element-token format))
+                        (fn [tokens]
+                          (gen/return 
+                            (concat
+                              [(t/->ParagraphBegin style)]
+                              tokens
+                              [(t/->ParagraphEnd style)])))))))
+
 (defn text-element-token
   [format]
   (gen/frequency
-    [[7 (paragraph-element-token format)]
-     [2 (token-newparagraph format)]
+    [[7 (paragraph format)]
      [1 (token-newpage format)]
      ]))
+
+(defn text-elements
+  [format]
+  (gen/bind (gen/vector (text-element-token format))
+            (fn [tokens]
+              (gen/return (flatten tokens)))))
 
 (def spacing
   (gen/fmap (partial into {})

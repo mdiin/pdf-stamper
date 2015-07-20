@@ -10,8 +10,9 @@
   [elm-type]
   (fn [content style]
     (let [new-style (assoc style :format elm-type)]
-      [(tokenize content new-style)
-       (token/->NewParagraph new-style)])))
+      [(token/->ParagraphBegin new-style)
+       (tokenize content new-style)
+       (token/->ParagraphEnd new-style)])))
 
 (def t-paragraph (t-paragraph-elm :paragraph))
 (def t-head-1 (t-paragraph-elm :head-1))
@@ -26,8 +27,9 @@
                         (assoc-in [:list :type] elm-type)
                         (assoc-in [:list :numbering] (atom 0))
                         (update-in [:list :indent :level] (fnil inc 0)))]
-      [(tokenize content new-style)
-       (token/->NewParagraph new-style)])))
+      [(token/->ParagraphBegin new-style)
+       (tokenize content new-style)
+       (token/->ParagraphEnd new-style)])))
 
 (def t-unordered-list (t-list-elm :bullet))
 (def t-ordered-list (t-list-elm :number))

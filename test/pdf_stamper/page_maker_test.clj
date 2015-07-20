@@ -59,7 +59,8 @@
 
 (def splitting-tokens-honours-max-height-prop
   (prop/for-all
-    [tokens (gen/vector (pdf-gen/text-element-token :paragraph))
+    [;tokens (gen/vector (pdf-gen/text-element-token :paragraph))
+     tokens (pdf-gen/text-elements :paragraph)
      hole-dimensions (gen/fmap (partial into {})
                                (gen/tuple
                                  (gen/tuple
