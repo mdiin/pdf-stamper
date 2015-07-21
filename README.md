@@ -1,6 +1,10 @@
 [![Issues ready for development](https://badge.waffle.io/mdiin/pdf-stamper.png?label=ready&title=Ready)](https://waffle.io/mdiin/pdf-stamper)
 [![Issues in progress](https://badge.waffle.io/mdiin/pdf-stamper.png?label=in%20progress&title=In%20progress)](https://waffle.io/mdiin/pdf-stamper)
 
+# NOTE: This is still in very early stages of development.
+
+Active development is happening mostly in branches, and only when I can find the time.
+
 # pdf-stamper
 
 Combine JSON template description with PDF template files and input data to
