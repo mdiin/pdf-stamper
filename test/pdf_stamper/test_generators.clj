@@ -138,9 +138,9 @@
 ;;;
 
 (defn- base-style
-  ^{:pre [(not-empty formats)
-          (not-empty character-styles)]}
   [formats character-styles]
+  {:pre [(not-empty formats)
+         (not-empty character-styles)]}
   (gen/fmap (partial into {})
             (gen/tuple
               (gen/tuple
@@ -183,11 +183,40 @@
     [[9 (token-word format)]
      [1 (token-newline format)]]))
 
+(defn- bullet
+  [format style]
+  (condp = format
+    :bullet (t/->ListBullet style)
+    :number (t/->ListNumber style 1)))
+
+(defn- list-element
+  [format]
+  (gen/bind (base-style [format] [:regular])
+            (fn [style]
+              (gen/bind (gen/such-that not-empty 
+                                       (gen/vector (token-word format)))
+                        (fn [words]
+                          (gen/return
+                            (concat
+                              [(bullet format style)]
+                              words
+                              [(t/->NewLine style)])))))))
+
+(defn- list-elements
+  [format]
+  (gen/bind (gen/such-that not-empty (gen/vector (list-element format)))
+            (fn [list-elements]
+              (gen/return
+                (flatten list-elements)))))
+
 (defn paragraph
   [format]
   (gen/bind (base-style [format] [:regular])
             (fn [style]
-              (gen/bind (gen/vector (paragraph-element-token format))
+              (gen/bind (condp = format
+                          :bullet (list-elements format)
+                          :number (list-elements format)
+                          (gen/vector (paragraph-element-token format)))
                         (fn [tokens]
                           (gen/return 
                             (concat
@@ -203,10 +232,12 @@
      ]))
 
 (defn text-elements
-  [format]
-  (gen/bind (gen/vector (text-element-token format))
-            (fn [tokens]
-              (gen/return (flatten tokens)))))
+  [formats]
+  (gen/bind (gen/elements formats)
+            (fn [format] 
+              (gen/bind (gen/vector (text-element-token format))
+                        (fn [tokens]
+                          (gen/return (flatten tokens)))))))
 
 (def spacing
   (gen/fmap (partial into {})

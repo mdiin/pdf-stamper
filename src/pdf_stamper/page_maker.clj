@@ -1,7 +1,7 @@
 (ns pdf-stamper.page-maker
   (:require
     [clojure.data.xml :as xml]
-    
+
     [pdf-stamper.protocols :as p :refer [SelectToken]]
     [pdf-stamper.tokenizer :refer [tokenize]]
     [pdf-stamper.tokenizer.xml :as xml-tokenizer]
@@ -37,9 +37,9 @@
 ;;                     /-----------\
 ;;                     | Templates |
 ;;                     \-----------/
-;;                           | 
+;;                           |
 ;;                           | 1..n
-;;                           | 
+;;                           |
 ;;                       /-------\
 ;;                       | Pages |
 ;;                       \-------/
@@ -77,7 +77,6 @@
 (extend-protocol p/SelectToken
   pdf_stamper.tokenizer.tokens.Word
   (select-token [token {:as remaining-space :keys [width height]} formats context]
-    ;(println (str "page-maker::select-token(Word) -> ENTER"))
     (let [res (cond
             ;; Room for one more on the line
             (and
@@ -93,7 +92,6 @@
 
             :default
             nil)]
-      ;(println (str "page-maker::select-token(Word) -> LEAVE (" res ")"))
       res))
 
   (horizontal-increase? [_] false)
@@ -104,7 +102,7 @@
       ;; Room for one more line
       (<= (p/height token formats context) height)
       [token]
-      
+
       :default
       nil))
 
@@ -115,7 +113,7 @@
     (cond
       (<= (p/height token formats context) height)
       [token]
-      
+
       :default
       nil))
 
@@ -126,7 +124,7 @@
     (cond
       (<= (p/height token formats context) height)
       [token]
-      
+
       :default
       nil))
 
@@ -138,7 +136,7 @@
       ;; Room for a new paragraph
       (<= (p/height token formats context) height)
       [token]
-      
+
       :default
       nil))
 
@@ -150,7 +148,7 @@
     [token])
 
   (horizontal-increase? [_] true)
-  
+
   nil
   (select-token [_ _ _ _] nil)
   (horizontal-increase? [_] false))
@@ -158,13 +156,11 @@
 (defn- maybe-inc-height
   [orig-sheight tokens formats context]
   {:post [(number? %)]}
-  ;(println (str "Page-maker::maybe-inc-height -> ENTER"))
   (let [height-increase-tokens (filter p/horizontal-increase? tokens)
         total-increase (reduce + 0 (map
                                      #(p/height % formats context)
                                      height-increase-tokens))]
     (let [res (+ orig-sheight total-increase)]
-      ;(println (str "Page-maker::maybe-inc-height -> LEAVE(" res ")"))
       res)))
 
 (defn- all-tokens
@@ -175,33 +171,29 @@
     (map #(satisfies? p/SelectToken %) tokens)))
 
 (defn split-tokens
-  [tokens {:as dimensions :keys [hheight hwidth]} formats context]
+  [tokens {:as hole-dimensions :keys [hheight hwidth]} formats context]
   {:pre [(number? hheight)
          (number? hwidth)]
    :post [(all-tokens (:selected %))
           (all-tokens (:remaining %))]}
-  ;(println "PageMaker::Split-tokens")
   (let [first-token (first tokens)
         init-state {:selected []
                     :remaining tokens
-                    :sheight (if first-token (p/height first-token formats context) 0)
-                    :swidth 0}]
-    (loop [{:as acc :keys [selected remaining sheight swidth]} init-state]
-      ;(println (str "page-maker::split-tokens::loop -> ENTER (" acc ")"))
-      (let [remaining-space {:width (- hwidth swidth)
-                             :height (- hheight sheight)}]
+                    :selected-height (if first-token (p/height first-token formats context) 0)
+                    :selected-width 0}]
+    (loop [{:as acc :keys [selected remaining selected-height selected-width]} init-state]
+      (let [remaining-space {:width (- hwidth selected-width)
+                             :height (- hheight selected-height)}]
         (if-let [tokens (p/select-token (first remaining) remaining-space formats context)]
           (let [res (-> acc
                         (update-in [:selected] into tokens)
                         (update-in [:remaining] (partial drop 1))
-                        (update-in [:swidth] + (p/width (first remaining) formats context))
-                        (update-in [:sheight] maybe-inc-height tokens formats context))]
-            ;(println (str "page-maker::split-tokens::loop -> RECUR (" res ")"))
+                        (update-in [:selected-width] + (p/width (first remaining) formats context))
+                        (update-in [:selected-height] maybe-inc-height tokens formats context))]
             (recur
               res
               ))
           (let [res (select-keys acc [:selected :remaining])]
-            ;(println (str "page-maker::split-tokens::loop -> LEAVE (" res ")"))
             res))))))
 
 (defn- page-template-exists?
