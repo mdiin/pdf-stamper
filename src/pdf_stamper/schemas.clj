@@ -51,17 +51,17 @@
                    :number BulletParagraphFormat}}))
 
 (def Hole
-  (s/either
-    ImageHole
-    TextHole
-    TextParsedHole))
+  (s/conditional
+    #(= :image (:type %)) ImageHole
+    #(= :text (:type %)) TextHole
+    #(= :text-parsed (:type %)) TextParsedHole))
 
 (def Template
   {:name s/Keyword
    (s/optional-key :overflow) s/Keyword
    :holes [Hole]})
 
-(defn valid-template?
+(defn validation-errors
   [template]
-  (not (s/check Template template)))
+  (s/check Template template))
 
