@@ -9,7 +9,7 @@
                  [org.clojure/data.xml "0.0.8"] ;; XML parsing
                  [org.apache.pdfbox/pdfbox "1.8.7"] ;; PDF
                  [potemkin "0.3.10"] ;; Code organisation
-                 [prismatic/schema "0.3.1"] ;; Template validations
+                 [prismatic/schema "1.0.4"] ;; Template validations
                  ]
   :deploy-repositories [["releases" :clojars]])
 
