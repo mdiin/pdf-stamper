@@ -155,21 +155,29 @@
   (assert (page-template-exists? page-data context)
           (str "No template " (:template page-data) " for page."))
   (let [template (:template page-data)
+        num-pages (.getNumberOfPages document)
+        only-if (:if-page page-data)
         template-overflow (context/get-template-overflow template context)
         template-holes (context/get-template-holes template context)
         template-doc (context/get-template-document template context)
         template-page (-> template-doc (.getDocumentCatalog) (.getAllPages) (.get 0))
-        template-c-stream (PDPageContentStream. document template-page true false)]
-    (.addPage document template-page)
-    (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
-          overflow-page-data {:template template-overflow
-                              :locations (when (seq overflows)
-                                           (merge (:locations page-data) overflows))}]
-      (.close template-c-stream)
-      (if (and (seq (:locations overflow-page-data))
-               (:template overflow-page-data))
-        (conj (fill-page document overflow-page-data context) template-doc)
-        [template-doc]))))
+        template-c-stream (PDPageContentStream. document template-page true false)
+        add-page? (or (not only-if)
+                      (and (= only-if :odd) (even? num-pages)) ; only add if last page was even
+                      (and (= only-if :even) (odd? num-pages)))]
+    (if add-page?
+      (do
+        (.addPage document template-page)
+        (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
+              overflow-page-data {:template template-overflow
+                                  :locations (when (seq overflows)
+                                               (merge (:locations page-data) overflows))}]
+          (.close template-c-stream)
+          (if (and (seq (:locations overflow-page-data))
+                   (:template overflow-page-data))
+            (conj (fill-page document overflow-page-data context) template-doc)
+            [template-doc])))
+      [])))
 
 (defn fill-pages
   "When the context is populated with fonts and templates, this is the
@@ -205,4 +213,3 @@
 
 ;; This concludes the discussion of the primary interface to pdf-stamper. Following are the namespace documentations for the functionality
 ;; that is not directly user-facing.
-
