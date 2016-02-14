@@ -251,7 +251,10 @@
   [:rhubarbflower :rhubarbroots]
 
   And the appropriate template parts merged together in the order they are
-  specified in the parts vector."
+  specified in the parts vector.
+  
+  Returns a vector of [template-map]. [template-map] is a map where `:name` is
+  the generated template's name, and `:value` is the generated template."
   [naming-scheme parts]
   (let [naming-scheme-replacement-map (into {} (map (comp vec reverse)
                                                     (re-seq #"\$([^\$]+)\$" naming-scheme)))]

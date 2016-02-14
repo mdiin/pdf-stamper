@@ -11,5 +11,11 @@
                  [potemkin "0.3.10"] ;; Code organisation
                  [prismatic/schema "1.0.4"] ;; Template validations
                  ]
-  :deploy-repositories [["releases" :clojars]])
+  :deploy-repositories [["releases" :clojars]]
+  :source-paths ["src"]
+  :profiles {:test {:dependencies [[org.clojure/clojure "1.7.0"]
+                                   [org.clojure/test.check "0.9.0"]]
+                    :source-paths ["test"]}
+             :manual-tests {:dependencies [[org.clojure/tools.nrepl "0.2.12"]]
+                            :source-paths ["tests-manual"]}})
 
