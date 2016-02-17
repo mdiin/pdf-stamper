@@ -6,12 +6,13 @@
 ;; the final templates can be described by a number of trees, where each path from a leaf to the
 ;; root describes one template.
 ;;
-;; To avoid having to write an exponential number of template descriptions by hand, this name
-;; space provides utilities that allow you to specify how the semantic layers relate to each
-;; other.
+;; To avoid having to write an exponential number of template descriptions by hand, this namespace
+;; provides utilities that allow you to specify how the semantic layers relate to each other.
 
 (ns pdf-stamper.template-utils
   (:require
+    [pdf-stamper.schemas :as schemas]
+
     [clojure.zip :as zip]
     ))
 
@@ -178,30 +179,27 @@
 ;; The paths from leaf to root describe the final templates by merging the value at each
 ;; node. Values closer to the leaves overwrite values closer to the root in case of conflicts.
 
-(defn- tree-paths
+(defn tree-paths
   "Construct a vector of **root-leaf** paths for tree. The paths contain only the node values."
   [tree]
-  (loop [paths []
-         leaf (to-leaf tree)]
-    (let [leaf-path (map ::value (zip/path leaf))
-          leaf-value (::value (zip/node leaf))
-          full-path (conj leaf-path leaf-value)]
-      (if (zip/right leaf)
-        (recur (conj paths full-path)
-               (zip/right leaf))
-        (if-let [next-subtree (next-subtree leaf)]
-          (recur (conj paths full-path)
-                 (to-leaf next-subtree))
-          (conj paths full-path))))))
+  (let [root->leafs (loop [paths []
+                           leaf (to-leaf tree)]
+                      (let [leaf-path (mapv ::value (zip/path leaf))
+                            leaf-value (::value (zip/node leaf))
+                            full-path (conj leaf-path leaf-value)]
+                        (if (zip/right leaf)
+                          (recur (conj paths full-path)
+                                 (zip/right leaf))
+                          (if-let [next-subtree (next-subtree leaf)]
+                            (recur (conj paths full-path)
+                                   (to-leaf next-subtree))
+                            (conj paths full-path)))))]
+    root->leafs))
 
-;; Notice the `(map reverse ...)` in `all-paths`. It is there because `tree-paths` constructs
-;; **root-leaf** paths, not the necessary **leaf-root** paths.
-
-(defn- all-paths
-  "Construct a seq of all **leaf-root** paths from all trees."
+(defn all-paths
+  "Construct a seq of all **root-leaf** paths from all trees."
   [trees]
-  (map reverse
-       (mapcat tree-paths trees)))
+  (mapcat tree-paths trees))
 
 ;; ### Building templates
 ;;
@@ -217,19 +215,46 @@
       part-name)
     name-with-holes))
 
-(defn- path-to-template
-  "Build a template from a naming scheme and a leaf-root path."
-  [naming-scheme path]
-  (reduce (fn [template template-part]
-            (let [metadata (meta template-part)
-                  part-name (::part-name metadata)
-                  scheme-value (::name metadata)]
-              (-> template
-                  (update-in [:value] merge template-part)
-                  (update-in [:name] replace-holes scheme-value part-name))))
-          {:value {}
-           :name naming-scheme}
-          path))
+(defn- merge-hole-bases
+  "Merges a seq of hole bases into a single seq of holes. A [hole base] is a vector
+  of maps. The result is a single vector of maps."
+  [hole-bases & {:keys [?merge-fn ?validation-error-fn]}]
+  (let [valid-hole? (if ?validation-error-fn
+                      #(schemas/valid-hole % ?validation-error-fn)
+                      schemas/valid-hole)]
+    (into []
+          (filter valid-hole?
+                  (map (partial apply (or ?merge-fn merge))
+                       (vals
+                         (group-by :name
+                                   (flatten hole-bases))))))))
+
+(defn path-to-template
+  "Build a template from a naming scheme and a leaf-root path. Takes an optional
+  merge function used when merging two templates."
+  [naming-scheme path & {:keys [?merge-fn ?validation-error-fn]}]
+  (let [unmerged-holes (reduce (fn [template template-part]
+                                 (let [metadata (meta template-part)
+                                       part-name (::part-name metadata)
+                                       scheme-value (::name metadata)]
+                                   (-> template
+                                       (update-in [:holes] conj template-part)
+                                       (update-in [:name] replace-holes scheme-value part-name))))
+                               {:holes []
+                                :name naming-scheme}
+                               path)
+        validation-error-fn (when ?validation-error-fn
+                              (partial ?validation-error-fn (:name unmerged-holes)))]
+    (-> unmerged-holes
+        (update-in [:holes] #(merge-hole-bases % :?merge-fn ?merge-fn :?validation-error-fn validation-error-fn))
+        (update-in [:name] keyword))))
+
+(defn parts->trees
+  [parts]
+  (reduce (fn [trees part]
+            (add-part trees part))
+          []
+          parts))
 
 (defn make-templates
   "Naming scheme is a keyword with \"holes\" defined by $hole-name$. Example
@@ -240,65 +265,76 @@
   Values inbetween $'s are matched to the :name of individual parts and replaced
   as needed. Example with the above naming scheme:
 
-  parts = [base-all
-           {:pdf-stamper/name \"part\"
-            :pdf-stamper/optional? true
-            :pdf-stamper/variants [{::variant-name \"flower\" ::variant-part rhubarb-flower}
-           {::variant-name \"roots\" ::variant-part rhubarb-roots}]}]
+  parts = [<holes>
+           {:pdf-stamper.template-utils/name \"part\"
+            :pdf-stamper.template-utils/optional? true
+            :pdf-stamper.template-utils/variants [{:pdf-stamper.template-utils/variant-name \"flower\"
+                                                   :pdf-stamper.template-utils/variant-part <holes>}
+                                                  {:pdf-stamper.template-utils/variant-name \"roots\"
+                                                   :pdf-stamper.template-utils/variant-part <holes>}]}]
 
   would yield templates with the names:
 
   [:rhubarbflower :rhubarbroots]
 
   And the appropriate template parts merged together in the order they are
-  specified in the parts vector.
+  specified in the parts vector. <holes> is a vector of hole parts.
   
-  Returns a vector of [template-map]. [template-map] is a map where `:name` is
-  the generated template's name, and `:value` is the generated template."
-  [naming-scheme parts]
+  Returns a vector of <template.> <template> is a valid template.
+  
+  ?merge-fn is a function that can merge two maps. The default is to use `clojure.core/merge`.
+
+  ?validation-error-fn is a function that will be called once for every hole that is discarded
+  during template construction (due to validation errors). It receives a template name and a
+  validation error."
+  [naming-scheme parts & {:keys [?merge-fn ?validation-error-fn] :as opts}]
   (let [naming-scheme-replacement-map (into {} (map (comp vec reverse)
                                                     (re-seq #"\$([^\$]+)\$" naming-scheme)))]
-    (map (partial path-to-template naming-scheme)
-         (all-paths
-           (reduce (fn [trees part]
-                     (add-part trees part))
-                   []
-                   parts)))))
+    (map (fn [path]
+           (path-to-template naming-scheme path :?merge-fn ?merge-fn :?validation-error-fn ?validation-error-fn))
+         (mapcat tree-paths (parts->trees parts)))))
 
 (comment
-  (make-templates "test1" [{:name :neo}
-                           {:skills :flying}])
+  (make-templates "test1" [[{:neo :name
+                             :x 1.0
+                             :skills :flying}]]
+                  :?validation-error-fn (fn [n e]
+                                          (println n)
+                                          (println e)))
 
-  (make-templates "test2$extra$" [{:name :neo}
-                                  {:skills :flying}
+  (make-templates "test2$extra$" [[{:name :neo
+                                    :x 1.0
+                                    :skills :flying}]
                                   {::name "extra"
-                                   ::variants [{::variant-name "-morpheus" ::variant-part {:side-kick :morpheus}}]}])
+                                   ::variants [{::variant-name "-morpheus" ::variant-part [{:name :neo
+                                                                                            :x 2.0
+                                                                                            :side-kick :morpheus}]}]}])
 
-  (make-templates "test3$extra$" [{:name :neo}
-                                  {:skills :flying}
+  (make-templates "test3$extra$" [[{:name :neo
+                                    :x 1.0
+                                    :skills :flying}]
                                   {::name "extra"
                                    ::optional? true
-                                   ::variants [{::variant-name "-morpheus" ::variant-part {:side-kick :morpheus}}]}])
+                                   ::variants [{::variant-name "-morpheus" ::variant-part [{:name :neo
+                                                                                            :x 2.0
+                                                                                            :side-kick :morpheus}]}]}])
 
-  (make-templates "test4$extra$with$bliss$" [{:name :neo}
-                                             {:skills :flying}
+  (make-templates "test4$extra$with$bliss$" [[{:name :neo
+                                               :x 1.0
+                                               :skills :flying}]
                                              {::name "extra"
                                               ::optional? true
-                                              ::variants [{::variant-name "-morpheus-" ::variant-part {:side-kick :morpheus}}]}
-                                             {:ignorance? :bliss}
+                                              ::variants [{::variant-name "-morpheus-" ::variant-part [{:name :neo
+                                                                                                        :x 2.0
+                                                                                                        :side-kick :morpheus}]}]}
+                                             [{:name :rememeber
+                                               :x 1.0
+                                               :ignorance? :bliss}]
                                              {::name "bliss"
-                                              ::variants [{::variant-name "-bliss" ::variant-part {:type :beef}}
-                                                          {::variant-name "-extra-bliss" ::variant-part {:type :beef :rarity :rare}}]}])
-  
-  (make-templates "hc$Tn$$26K$$Egv7$" [{::name "26K",
-                                        ::optional? true,
-                                        ::variants [{::variant-name "pDQ", ::variant-part {}}
-                                                    {::variant-name "6A", ::variant-part {[] {}}}]}
-                                       {}])
-  
-  (make-templates "hc$26K$" [{::name "26K",
-                              ::optional? true,
-                              ::variants [{::variant-name "pDQ", ::variant-part {}}
-                                          {::variant-name "6A", ::variant-part {[] {}}}]}
-                             {}]))
+                                              ::variants [{::variant-name "-bliss" ::variant-part [{:name :rememeber
+                                                                                                    :x 2.0
+                                                                                                    :type :beef}]}
+                                                          {::variant-name "-extra-bliss" ::variant-part [{:name :rememeber
+                                                                                                          :x 3.0
+                                                                                                          :type :beef :rarity :rare}]}]}]))
 
