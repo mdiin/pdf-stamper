@@ -58,7 +58,7 @@
     'has-valid-type-key))
 
 (def hole-checker (s/checker Hole))
-(defn valid-hole
+(defn valid-hole?
   "Return v if v is a valid hole, false otherwise.
   
   If validation-err-fn is supplied, calls that function with the error message.

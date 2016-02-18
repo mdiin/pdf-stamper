@@ -220,8 +220,8 @@
   of maps. The result is a single vector of maps."
   [hole-bases & {:keys [?merge-fn ?validation-error-fn]}]
   (let [valid-hole? (if ?validation-error-fn
-                      #(schemas/valid-hole % ?validation-error-fn)
-                      schemas/valid-hole)]
+                      #(schemas/valid-hole? % ?validation-error-fn)
+                      schemas/valid-hole?)]
     (into []
           (filter valid-hole?
                   (map (partial apply (or ?merge-fn merge))
