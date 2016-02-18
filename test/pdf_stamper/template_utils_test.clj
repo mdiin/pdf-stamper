@@ -105,7 +105,7 @@
 
 (defspec contains-expected-number-of-templates
   {:max-size 8
-   :num-tests 1000}
+   :num-tests 200}
   (for-all [[naming-scheme ps] parts]
     (let [templates (make-templates naming-scheme ps)]
       (= (count templates)
@@ -118,7 +118,7 @@
 
 (defspec merges-in-leaf-to-root-order
   {:max-size 8
-   :num-tests 1000}
+   :num-tests 200}
   (for-all [[naming-scheme ps] parts]
     (let [first-tree ((comp first parts->trees) ps)
           first-paths (if first-tree
