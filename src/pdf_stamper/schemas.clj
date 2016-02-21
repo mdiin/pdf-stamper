@@ -54,7 +54,28 @@
   (s/conditional
     #(= :image (:type %)) ImageHole
     #(= :text (:type %)) TextHole
-    #(= :text-parsed (:type %)) TextParsedHole))
+    #(= :text-parsed (:type %)) TextParsedHole
+    'has-valid-type-key))
+
+(def hole-checker (s/checker Hole))
+
+(defn valid-hole?
+  "Return v if v is a valid hole, false otherwise.
+  
+  If error-fn is supplied, calls that function with the error message.
+  The return value of error-fn is discarded."
+  ([v]
+   (not (hole-checker v)))
+
+  ([v error-fn]
+   {:pre [(fn? error-fn)]}
+   (if-let [err (hole-checker v)]
+     (do
+       (error-fn (merge v (if (map? err)
+                            err
+                            {:error err})))
+       false)
+     true)))
 
 (def Template
   {:name s/Keyword
