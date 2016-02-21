@@ -196,7 +196,7 @@
                             (conj paths full-path)))))]
     root->leafs))
 
-(defn all-paths
+(defn- all-paths
   "Construct a seq of all **root-leaf** paths from all trees."
   [trees]
   (mapcat tree-paths trees))
