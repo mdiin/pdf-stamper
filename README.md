@@ -1,9 +1,6 @@
-[![Issues ready for development](https://badge.waffle.io/mdiin/pdf-stamper.png?label=ready&title=Ready)](https://waffle.io/mdiin/pdf-stamper)
-[![Issues in progress](https://badge.waffle.io/mdiin/pdf-stamper.png?label=in%20progress&title=In%20progress)](https://waffle.io/mdiin/pdf-stamper)
+# This is still in very early stages of development.
 
-# NOTE: This is still in very early stages of development.
-
-Active development is happening mostly in branches, and only when I can find the time.
+It is being used in production in Ingenium Golf, and has been for the last year, so it is pretty stable by now. Active development is happening mostly in branches, and only when I can find the time (or it intersects with the needs of Ingenium Golf).
 
 # pdf-stamper
 
