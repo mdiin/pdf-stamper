@@ -1,6 +1,5 @@
 {:name :template-1
- :only-on {:pages :odd
-           :filler :template-1-filler}
+ :only-on {:pages :even}
  :holes [{:name :centered-image
           :height 50.0
           :width 80.0
