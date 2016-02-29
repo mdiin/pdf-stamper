@@ -16,7 +16,14 @@
                   (add-template template-1-filler template-pdf-1)))
 
 (def pages
-  [{:template :template-1
+  [{:template :template-1-filler
+    :locations {:centered-image {:contents {:image background}}
+                :centered-text {:contents {:text text}}
+                :top-image {:contents {:image background}}
+                :top-text {:contents {:text text}}
+                :bottom-image {:contents {:image background}}
+                :bottom-text {:contents {:text text}}}}
+   {:template :template-1
     :locations {:centered-image {:contents {:image background}}
                 :centered-text {:contents {:text text}}
                 :top-image {:contents {:image background}}
@@ -32,6 +39,13 @@
                 :bottom-image {:contents {:image background}}
                 :bottom-text {:contents {:text text}}}
     :filler-locations {:centered-text {:contents {:text filler-text}}}}
+   {:template :template-1-filler
+    :locations {:centered-image {:contents {:image background}}
+                :centered-text {:contents {:text text}}
+                :top-image {:contents {:image background}}
+                :top-text {:contents {:text text}}
+                :bottom-image {:contents {:image background}}
+                :bottom-text {:contents {:text text}}}}
    {:template :template-1
     :locations {:centered-image {:contents {:image background}}
                 :centered-text {:contents {:text text}}

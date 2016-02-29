@@ -127,7 +127,24 @@
 ;;
 ;; pdf-stamper exists to fill data onto pages while following a pre-defined layout. This is where the magic happens.
 
-(defn- skip-page-with
+(defn- skip-page?
+  "The page should be skipped if the template specifies that it can only be printed
+  on a specific page, but supplies no filler template."
+  [template number-of-pages]
+  (let [{:keys [pages filler]} (:only-on template)]
+    (cond
+      (and (even? number-of-pages)
+           (= pages :even))
+      (not filler)
+      
+      (and (odd? number-of-pages)
+           (= pages :odd))
+      (not filler)
+      
+      :default
+      false)))
+
+(defn- insert-before
   "Returns a template to use for a filler page if appropriate, nil otherwise."
   [template number-of-pages]
   (let [{:keys [pages filler]} (:only-on template)]
@@ -189,29 +206,33 @@
   (assert (page-template-exists? page-data context)
           (str "No template " (:template page-data) " for page."))
   (let [template (context/template (:template page-data) context)]
-    (when-let [filler (skip-page-with template (.getNumberOfPages document))]
-      (let [filler-data {:template filler
-                         :locations (:filler-locations page-data)}]
-        (fill-page document filler-data context)))
-    (let [template-overflow (:overflow template)
-          template-transforms (:transform-pages template)
-          template-holes (:holes template)
-          template-doc (context/template-document (:template page-data) context)
-          template-page (-> template-doc (.getDocumentCatalog) (.getAllPages) (.get 0))
-          template-c-stream (PDPageContentStream. document template-page true false)]
-     (.addPage document template-page)
-     (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
-           overflow-page-data {:template template-overflow
-                               :locations (when (seq overflows)
-                                            (merge (:locations page-data) overflows))}]
-       (when-let [transforms (transform-page-with template (.getNumberOfPages document))]
-         (doseq [t transforms]
-           (transform template-page t)))
-       (.close template-c-stream)
-       (if (and (seq (:locations overflow-page-data))
-                (:template overflow-page-data))
-         (conj (fill-page document overflow-page-data context) template-doc)
-         [template-doc])))))
+    (if (skip-page? template (.getNumberOfPages document))
+      []
+      (do
+        (when-let [filler (insert-before template (.getNumberOfPages document))]
+          (assert filler)
+          (let [filler-data {:template filler
+                             :locations (:filler-locations page-data)}]
+            (fill-page document filler-data context)))
+        (let [template-overflow (:overflow template)
+              template-transforms (:transform-pages template)
+              template-holes (:holes template)
+              template-doc (context/template-document (:template page-data) context)
+              template-page (-> template-doc (.getDocumentCatalog) (.getAllPages) (.get 0))
+              template-c-stream (PDPageContentStream. document template-page true false)]
+          (.addPage document template-page)
+          (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
+                overflow-page-data {:template template-overflow
+                                    :locations (when (seq overflows)
+                                                 (merge (:locations page-data) overflows))}]
+            (when-let [transforms (transform-page-with template (.getNumberOfPages document))]
+              (doseq [t transforms]
+                (transform template-page t)))
+            (.close template-c-stream)
+            (if (and (seq (:locations overflow-page-data))
+                     (:template overflow-page-data))
+              (conj (fill-page document overflow-page-data context) template-doc)
+              [template-doc])))))))
 
 (defn fill-pages
   "When the context is populated with fonts and templates, this is the
