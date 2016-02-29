@@ -61,7 +61,7 @@
 
 (defn valid-hole?
   "Return v if v is a valid hole, false otherwise.
-  
+
   If error-fn is supplied, calls that function with the error message.
   The return value of error-fn is discarded."
   ([v]
@@ -77,9 +77,17 @@
        false)
      true)))
 
+(def Transforms
+  {:rotate (s/enum 0 90 180 270)})
+
 (def Template
   {:name s/Keyword
    (s/optional-key :overflow) s/Keyword
+   (s/optional-key :only-on) {:pages (s/enum :even :odd)
+                              :filler s/Keyword} ;; TODO: Somehow check that the filler doesn't specify that it can only be printed on the same pages as this template
+   (s/optional-key :transform-pages) (s/constrained {(s/optional-key :even) Transforms
+                                                     (s/optional-key :odd) Transforms}
+                                                    not-empty)
    :holes [Hole]})
 
 (defn validation-errors

@@ -1,0 +1,19 @@
+{:name :template-1-filler
+ :holes [{:name :centered-text
+          :height 50.0
+          :width 80.0
+          :x 80.0
+          :y 100.0
+          :type :text
+          :align {:horizontal :left
+                  :vertical :center}
+          :format {:font :times
+                   :style #{:regular}
+                   :size 14
+                   :color [0 0 0]
+                   :indent {:all 0}
+                   :spacing {:paragraph {:below 0
+                                         :above 0}
+                             :line {:below 0
+                                    :above 0}}}
+          :priority 2}]}

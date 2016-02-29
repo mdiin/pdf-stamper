@@ -35,13 +35,17 @@
       (assoc-in [:templates (:name template-def)] template-def)
       (assoc-in [:templates (:name template-def) :uri] template-uri)))
 
-(defn get-template-document
+(defn template-document
   "The template file is loaded lazily, i.e. it is not until a page actually
   requests to be written using the added template that it is read to memory."
   [template context]
   (let [file-uri (get-in context [:templates template :uri])]
     (assert file-uri (str "file-uri is nil for template " template))
     (PDDocument/load file-uri)))
+
+(defn template
+  [template context]
+  (get-in context [:templates template]))
 
 (defn get-template-holes
   "Any template consists of a number of holes specifying the size and shape
