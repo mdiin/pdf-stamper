@@ -3,59 +3,164 @@
     [pdf-stamper :refer :all]
     [clojure.edn :as edn]))
 
-(def template-1 (edn/read-string (slurp "test/templates/transform_only_on/template-1.edn")))
-(def template-1-filler (edn/read-string (slurp "test/templates/transform_only_on/template-1-filler.edn")))
+(def t1-fill {:name :t1-fill
+              :holes [{:name :c
+                       :height 50.0
+                       :width 80.0
+                       :x 10.0
+                       :y 10.0
+                       :type :text
+                       :align {:horizontal :left
+                               :vertical :center}
+                       :format {:font :times
+                                :style #{:regular}
+                                :size 12
+                                :color [0 0 0]
+                                :indent {:all 0}
+                                :spacing {:paragraph {:below 0
+                                                      :above 0}
+                                          :line {:below 0
+                                                 :above 0}}}
+                       :priority 2}]})
+
+(def t1 {:name :t1
+         :only-on {:pages :even
+                   :filler :t1-fill}
+         :holes [{:name :c
+                  :height 50.0
+                  :width 80.0
+                  :x 10.0
+                  :y 10.0
+                  :type :text
+                  :align {:horizontal :left
+                          :vertical :center}
+                  :format {:font :times
+                           :style #{:regular}
+                           :size 12
+                           :color [0 0 0]
+                           :indent {:all 0}
+                           :spacing {:paragraph {:below 0
+                                                 :above 0}
+                                     :line {:below 0
+                                            :above 0}}}
+                  :priority 2}]})
+
+(def t2-fill {:name :t2-fill
+              :holes [{:name :c
+                       :height 50.0
+                       :width 80.0
+                       :x 10.0
+                       :y 10.0
+                       :type :text
+                       :align {:horizontal :left
+                               :vertical :center}
+                       :format {:font :times
+                                :style #{:regular}
+                                :size 12
+                                :color [0 0 0]
+                                :indent {:all 0}
+                                :spacing {:paragraph {:below 0
+                                                      :above 0}
+                                          :line {:below 0
+                                                 :above 0}}}
+                       :priority 2}]})
+
+(def t2 {:name :t2
+         :only-on {:pages :odd
+                   :filler :t2-fill}
+         :holes [{:name :c
+                  :height 50.0
+                  :width 80.0
+                  :x 10.0
+                  :y 10.0
+                  :type :text
+                  :align {:horizontal :left
+                          :vertical :center}
+                  :format {:font :times
+                           :style #{:regular}
+                           :size 12
+                           :color [0 0 0]
+                           :indent {:all 0}
+                           :spacing {:paragraph {:below 0
+                                                 :above 0}
+                                     :line {:below 0
+                                            :above 0}}}
+                  :priority 2}]})
+
+(def t3 {:name :t3
+         :only-on {:pages :even}
+         :holes [{:name :c
+                  :height 50.0
+                  :width 80.0
+                  :x 10.0
+                  :y 10.0
+                  :type :text
+                  :align {:horizontal :left
+                          :vertical :center}
+                  :format {:font :times
+                           :style #{:regular}
+                           :size 12
+                           :color [0 0 0]
+                           :indent {:all 0}
+                           :spacing {:paragraph {:below 0
+                                                 :above 0}
+                                     :line {:below 0
+                                            :above 0}}}
+                  :priority 2}]})
+
+(def t4 {:name :t4
+         :only-on {:pages :odd}
+         :holes [{:name :c
+                  :height 50.0
+                  :width 80.0
+                  :x 10.0
+                  :y 10.0
+                  :type :text
+                  :align {:horizontal :left
+                          :vertical :center}
+                  :format {:font :times
+                           :style #{:regular}
+                           :size 12
+                           :color [0 0 0]
+                           :indent {:all 0}
+                           :spacing {:paragraph {:below 0
+                                                 :above 0}
+                                     :line {:below 0
+                                            :above 0}}}
+                  :priority 2}]})
+
 (def template-pdf-1 "test/templates/transform_only_on/template-1.pdf")
 
-(def background (javax.imageio.ImageIO/read (clojure.java.io/as-file "test/templates/transform_only_on/background.png")))
-(def text "Ålquiver")
-(def filler-text "FIllER")
-
 (def context (->> base-context
-                  (add-template template-1 template-pdf-1)
-                  (add-template template-1-filler template-pdf-1)))
+                  (add-template t1 template-pdf-1)
+                  (add-template t1-fill template-pdf-1)
+                  (add-template t2 template-pdf-1)
+                  (add-template t2-fill template-pdf-1)
+                  (add-template t3 template-pdf-1)
+                  (add-template t4 template-pdf-1)))
 
-(def pages
-  [{:template :template-1-filler
-    :locations {:centered-image {:contents {:image background}}
-                :centered-text {:contents {:text text}}
-                :top-image {:contents {:image background}}
-                :top-text {:contents {:text text}}
-                :bottom-image {:contents {:image background}}
-                :bottom-text {:contents {:text text}}}}
-   {:template :template-1
-    :locations {:centered-image {:contents {:image background}}
-                :centered-text {:contents {:text text}}
-                :top-image {:contents {:image background}}
-                :top-text {:contents {:text text}}
-                :bottom-image {:contents {:image background}}
-                :bottom-text {:contents {:text text}}}
-    :filler-locations {:centered-text {:contents {:text filler-text}}}}
-   {:template :template-1
-    :locations {:centered-image {:contents {:image background}}
-                :centered-text {:contents {:text text}}
-                :top-image {:contents {:image background}}
-                :top-text {:contents {:text text}}
-                :bottom-image {:contents {:image background}}
-                :bottom-text {:contents {:text text}}}
-    :filler-locations {:centered-text {:contents {:text filler-text}}}}
-   {:template :template-1-filler
-    :locations {:centered-image {:contents {:image background}}
-                :centered-text {:contents {:text text}}
-                :top-image {:contents {:image background}}
-                :top-text {:contents {:text text}}
-                :bottom-image {:contents {:image background}}
-                :bottom-text {:contents {:text text}}}}
-   {:template :template-1
-    :locations {:centered-image {:contents {:image background}}
-                :centered-text {:contents {:text text}}
-                :top-image {:contents {:image background}}
-                :top-text {:contents {:text text}}
-                :bottom-image {:contents {:image background}}
-                :bottom-text {:contents {:text text}}}
-    :filler-locations {:centered-text {:contents {:text filler-text}}}}])
+(def pages-1 [{:template :t1
+               :locations {:c {:contents {:text "T1"}}}
+               :filler-locations {:c {:contents {:text "T1 FILL"}}}}])
 
-(def out (fill-pages pages context))
-(.writeTo out (java.io.FileOutputStream. "out/transform-only-on.pdf"))
-(.close out)
+(def out-1 (fill-pages pages-1 context))
+(.writeTo out-1 (java.io.FileOutputStream. "out/transform-only-on-1.pdf"))
+(.close out-1)
+
+(def pages-2 [{:template :t2
+               :locations {:c {:contents {:text "T2"}}}
+               :filler-locations {:c {:contents {:text "T2 FILL"}}}}])
+
+(def out-2 (fill-pages pages-2 context))
+(.writeTo out-2 (java.io.FileOutputStream. "out/transform-only-on-2.pdf"))
+(.close out-2)
+
+(def pages-3 [{:template :t3
+               :locations {:c {:contents {:text "T3"}}}}
+              {:template :t4
+               :locations {:c {:contents {:text "T4"}}}}])
+
+(def out-3 (fill-pages pages-3 context))
+(.writeTo out-3 (java.io.FileOutputStream. "out/transform-only-on-3.pdf"))
+(.close out-3)
 
