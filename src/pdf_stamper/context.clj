@@ -26,22 +26,42 @@
   "Adding templates to the context is achieved using this function.
   When adding a template two things are needed: The template description,
   i.e. what goes where, and a locator for the PDF page to use with the
-  template description. The template locator can be either a URL or a string."
-  ^{:pre [(some? template-uri)]}
+  template description. The template locator can be either a URL or a string.
+  
   [template-def template-uri context]
-  (when-let [schema-check (schemas/validation-errors template-def)]
-    (throw (ex-info (str schema-check " | IN: " template-def) schema-check)))
-  (-> context
-      (assoc-in [:templates (:name template-def)] template-def)
-      (assoc-in [:templates (:name template-def) :uri] template-uri)))
+  Use the same template locator for both even and odd pages.
+  
+  [template-def odd-template-uri even-template-uri context]
+  Use a different template locator for even and odd pages."
+  ([template-def template-uri context]
+   {:pre [(some? template-uri)]}
+   (add-template template-def template-uri template-uri context))
+  
+  ([template-def odd-template-uri even-template-uri context]
+   {:pre [(some? odd-template-uri)
+          (some? even-template-uri)]}
+   (when-let [schema-check (schemas/validation-errors template-def)]
+     (throw (ex-info (str schema-check " | IN: " template-def) schema-check)))
+   (-> context
+       (assoc-in [:templates (:name template-def)] template-def)
+       (assoc-in [:templates (:name template-def) :uri :odd] odd-template-uri)
+       (assoc-in [:templates (:name template-def) :uri :even] even-template-uri))))
 
 (defn template-document
   "The template file is loaded lazily, i.e. it is not until a page actually
   requests to be written using the added template that it is read to memory."
-  [template context]
-  (let [file-uri (get-in context [:templates template :uri])]
+  [template side context]
+  (let [file-uri (get-in context [:templates template :uri side])]
     (assert file-uri (str "file-uri is nil for template " template))
     (PDDocument/load file-uri)))
+
+(defn template-document-even
+  [template context]
+  (template-document template :even context))
+
+(defn template-document-odd
+  [template context]
+  (template-document template :odd context))
 
 (defn template
   [template context]
