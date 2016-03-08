@@ -216,7 +216,9 @@
             template-overflow (:overflow template)
             template-transforms (:transform-pages template)
             template-holes (:holes template)
-            template-doc (context/template-document (:template page-data) context)
+            template-doc (if (odd? (inc (.getNumberOfPages document)))
+                           (context/template-document-odd (:template page-data) context)
+                           (context/template-document-even (:template page-data) context))
             template-page (-> template-doc (.getDocumentCatalog) (.getAllPages) (.get 0))
             template-c-stream (PDPageContentStream. document template-page true false)]
         (.addPage document template-page)
