@@ -233,20 +233,25 @@
   "Build a template from a naming scheme and a leaf-root path. Takes an optional
   merge function used when merging two templates."
   [naming-scheme path & {:keys [?merge-fn ?validation-error-fn]}]
-  (let [unmerged-holes (reduce (fn [template template-part]
-                                 (let [metadata (meta template-part)
-                                       part-name (::part-name metadata)
-                                       scheme-value (::name metadata)]
-                                   (-> template
-                                       (update-in [:holes] conj template-part)
-                                       (update-in [:name] replace-holes scheme-value part-name))))
-                               {:holes []
-                                :name naming-scheme}
-                               path)
+  (let [template-unmerged-holes (reduce (fn [template template-part]
+                                          (let [metadata (meta template-part)
+                                                part-name (::part-name metadata)
+                                                scheme-value (::name metadata)]
+                                            (-> template
+                                                (update-in [:holes] conj template-part)
+                                                (update-in [:name] replace-holes scheme-value part-name))))
+                                        {:holes []
+                                         :name naming-scheme}
+                                        path)
         validation-error-fn (when ?validation-error-fn
-                              (partial ?validation-error-fn (:name unmerged-holes)))]
-    (-> unmerged-holes
-        (update-in [:holes] #(merge-hole-bases % :?merge-fn ?merge-fn :?validation-error-fn validation-error-fn))
+                              (partial ?validation-error-fn (:name template-unmerged-holes)))
+        merged-holes (merge-hole-bases (:holes template-unmerged-holes)
+                                       :?merge-fn ?merge-fn 
+                                       :?validation-error-fn validation-error-fn)
+        holes {:odd merged-holes
+               :even merged-holes}]
+    (-> template-unmerged-holes
+        (assoc :holes holes)
         (update-in [:name] keyword))))
 
 (defn parts->trees
@@ -280,8 +285,10 @@
   And the appropriate template parts merged together in the order they are
   specified in the parts vector. <holes> is a vector of hole parts.
   
-  Returns a vector of <template.> <template> is a valid template.
-  
+  Returns a vector of <template>. <template> is a valid template: It contains the `:name` of the
+  template and a the `:holes`. Both `:even` and `:odd` holes are the same, so remember to update
+  as needed.  
+
   ?merge-fn is a function that can merge two maps. The default is to use `clojure.core/merge`.
 
   ?validation-error-fn is a function that will be called once for every hole that is discarded
