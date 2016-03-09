@@ -88,7 +88,8 @@
    (s/optional-key :transform-pages) (s/constrained {(s/optional-key :even) Transforms
                                                      (s/optional-key :odd) Transforms}
                                                     not-empty)
-   :holes [Hole]})
+   :holes {:odd [Hole]
+           :even [Hole]}})
 
 (defn validation-errors
   [template]

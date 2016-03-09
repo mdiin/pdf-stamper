@@ -34,9 +34,8 @@
   [template-def odd-template-uri even-template-uri context]
   Use a different template locator for even and odd pages."
   ([template-def template-uri context]
-   {:pre [(some? template-uri)]}
    (add-template template-def template-uri template-uri context))
-  
+
   ([template-def odd-template-uri even-template-uri context]
    {:pre [(some? odd-template-uri)
           (some? even-template-uri)]}
@@ -67,11 +66,19 @@
   [template context]
   (get-in context [:templates template]))
 
-(defn get-template-holes
+(defn template-holes
   "Any template consists of a number of holes specifying the size and shape
   of data when stamped onto the template PDF page."
+  [template side context]
+  (get-in context [:templates template :holes side]))
+
+(defn template-holes-even
   [template context]
-  (get-in context [:templates template :holes]))
+  (template-holes template :even context))
+
+(defn template-holes-odd
+  [template context]
+  (template-holes template :odd context))
 
 (defn get-template-overflow
   "Templates can specify an overflow template, a template that will be used
