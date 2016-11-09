@@ -31,7 +31,8 @@
 
 (def BulletParagraphFormat
   (merge ParagraphFormat
-         {(s/optional-key :bullet-char) s/Str}))
+         {(s/optional-key :bullet-char) s/Str
+          (s/optional-key :text-spacing) s/Num}))
 
 (def TextHole
   (merge BaseHole

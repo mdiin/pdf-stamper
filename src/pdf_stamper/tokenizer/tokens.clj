@@ -34,7 +34,7 @@
   (height [this formats context]
     ;(println "Tokens::Word::height")
     (single-line-height this formats context))
-  
+
   (width [this formats context]
     ;(println (str "tokens::Word::width -> ENTER"))
     (assert (keyword? (:format style)))
@@ -53,7 +53,7 @@
   (height [this formats context]
     ;(println "Tokens::NewLine::height")
     (single-line-height this formats context))
-  
+
   (width [this formats context]
     0.0))
 
@@ -65,7 +65,7 @@
       ;(println formatting)
       (+ (single-line-height this formats context)
          (get-in formatting [:spacing :paragraph :above]))))
-  
+
   (width [this formats context]
     0.0))
 
@@ -76,7 +76,7 @@
     (let [formatting (get formats (:format style))]
       (+ (single-line-height this formats context)
          (get-in formatting [:spacing :paragraph :below]))))
-  
+
   (width [this formats context]
     0.0))
 
@@ -84,7 +84,7 @@
   Token
   (height [this formats context]
     (paragraph-line-height this formats context))
-  
+
   (width [this formats context]
     0.0))
 
@@ -94,17 +94,32 @@
     ;(println "Tokens::NewPage::height")
     ;; A NewPage token always fills any remaining space on the page.
     Double/POSITIVE_INFINITY)
-  
+
   (width [this formats context]
     0.0))
 
 (defrecord ListBullet [style]
   Token
   (height [this formats context]
+    (single-line-height this formats context))
+
+  (width [this formats context]
+    (assert (keyword? (:format style)))
+    (let [formatting (get formats (:format style))
+          bullet-char (get formatting :bullet-char " ")
+          bullet-width (context/get-font-string-width
+                         (:font formatting)
+                         #{:regular}
+                         (:size formatting)
+                         bullet-char)
+          text-spacing (get formatting :text-spacing (:size formatting))]
+      (+ bullet-width text-spacing))))
+
+(defrecord ListNumber [style number]
+  Token
+  (height [this formats context]
     0.0)
-  
+
   (width [this formats context]
     0.0))
-
-(defrecord ListNumber [style number])
 
