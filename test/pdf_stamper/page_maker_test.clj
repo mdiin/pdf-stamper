@@ -15,7 +15,7 @@
 
 (def splitting-tokens-honours-max-line-width-prop
   (prop/for-all
-    [tokens (pdf-gen/text-elements [:paragraph])
+    [tokens (pdf-gen/text-elements [:paragraph :bullet])
      hole-dimensions (gen/fmap (partial into {})
                                (gen/tuple
                                  (gen/tuple
