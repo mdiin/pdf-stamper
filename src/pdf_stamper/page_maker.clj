@@ -111,6 +111,20 @@
 
   (horizontal-increase? [_] false)
 
+  pdf_stamper.tokenizer.tokens.ListNumber
+  (select-token [token {:as remaining-space :keys [width height]} formats context]
+    (cond
+      ;; No more room on line, issue warning
+      (<= (p/width token formats context) width)
+      (do
+        (println "WARNING: Hole for number paragraph narrower than number!")
+        [token])
+
+      :default
+      [token]))
+
+  (horizontal-increase? [_] false)
+
   pdf_stamper.tokenizer.tokens.NewLine
   (select-token [token {:as remaining-space :keys [width height]} formats context]
     (cond

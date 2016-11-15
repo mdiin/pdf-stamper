@@ -15,7 +15,7 @@
 
 (def splitting-tokens-honours-max-line-width-prop
   (prop/for-all
-    [tokens (pdf-gen/text-elements [:paragraph :bullet])
+    [tokens (pdf-gen/text-elements [:paragraph :bullet :number])
      hole-dimensions (gen/fmap (partial into {})
                                (gen/tuple
                                  (gen/tuple
@@ -31,6 +31,11 @@
                                          :paragraph paragraph-spacing}
                                :indent indent}
                    :bullet {:font :times
+                            :size 12
+                            :spacing {:line line-spacing
+                                      :paragraph paragraph-spacing}
+                            :indent indent}
+                   :number {:font :times
                             :size 12
                             :spacing {:line line-spacing
                                       :paragraph paragraph-spacing}
@@ -64,7 +69,7 @@
 
 (def splitting-tokens-honours-max-height-prop
   (prop/for-all
-    [tokens (pdf-gen/text-elements [:paragraph :bullet])
+    [tokens (pdf-gen/text-elements [:paragraph :bullet :number])
      hole-dimensions (gen/fmap (partial into {})
                                (gen/tuple
                                  (gen/tuple
@@ -80,6 +85,11 @@
                                          :paragraph paragraph-spacing}
                                :indent indent}
                    :bullet {:font :times
+                            :size 12
+                            :spacing {:line line-spacing
+                                      :paragraph paragraph-spacing}
+                            :indent indent}
+                   :number {:font :times
                             :size 12
                             :spacing {:line line-spacing
                                       :paragraph paragraph-spacing}

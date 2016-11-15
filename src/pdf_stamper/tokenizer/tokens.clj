@@ -119,8 +119,17 @@
 (defrecord ListNumber [style number]
   Token
   (height [this formats context]
-    0.0)
+    (single-line-height this formats context))
 
   (width [this formats context]
-    0.0))
+    (assert (keyword? (:format style)))
+    (let [formatting (get formats (:format style))
+          number-width (context/get-font-string-width
+                         (:font formatting)
+                         #{:regular}
+                         (:size formatting)
+                         (str number)
+                         context)
+          text-spacing (get formatting :text-spacing (:size formatting))]
+      (+ number-width text-spacing))))
 
