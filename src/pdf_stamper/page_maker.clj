@@ -96,6 +96,21 @@
 
   (horizontal-increase? [_] false)
 
+  pdf_stamper.tokenizer.tokens.ListBullet
+  (select-token [token {:as remaining-space :keys [width height]} formats context]
+    (cond
+      ;; No more room on line, issue warning
+      (<= (p/width token formats context) width)
+      (do
+        (println "WARNING: Hole for bullet paragraph narrower than bullet character!")
+        [token])
+
+      :default
+      [token]
+      ))
+
+  (horizontal-increase? [_] false)
+
   pdf_stamper.tokenizer.tokens.NewLine
   (select-token [token {:as remaining-space :keys [width height]} formats context]
     (cond

@@ -29,7 +29,12 @@
                                :size 12
                                :spacing {:line line-spacing
                                          :paragraph paragraph-spacing}
-                               :indent indent}}
+                               :indent indent}
+                   :bullet {:font :times
+                            :size 12
+                            :spacing {:line line-spacing
+                                      :paragraph paragraph-spacing}
+                            :indent indent}}
           context context/base-context
           {:keys [selected remaining]} (pm/split-tokens
                                          tokens
@@ -59,7 +64,7 @@
 
 (def splitting-tokens-honours-max-height-prop
   (prop/for-all
-    [tokens (pdf-gen/text-elements [:paragraph])
+    [tokens (pdf-gen/text-elements [:paragraph :bullet])
      hole-dimensions (gen/fmap (partial into {})
                                (gen/tuple
                                  (gen/tuple
@@ -73,7 +78,12 @@
                                :size 12
                                :spacing {:line line-spacing
                                          :paragraph paragraph-spacing}
-                               :indent indent}}
+                               :indent indent}
+                   :bullet {:font :times
+                            :size 12
+                            :spacing {:line line-spacing
+                                      :paragraph paragraph-spacing}
+                            :indent indent}}
           context context/base-context
           {:keys [selected remaining]} (pm/split-tokens
                                          tokens
@@ -100,10 +110,10 @@
       )))
 
 (defspec splitting-tokens-honours-max-line-width
-  100
+  50
   splitting-tokens-honours-max-line-width-prop)
 
 (defspec splitting-tokens-honours-max-height
-  100
+  50
   splitting-tokens-honours-max-height-prop)
 

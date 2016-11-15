@@ -111,7 +111,8 @@
                          (:font formatting)
                          #{:regular}
                          (:size formatting)
-                         bullet-char)
+                         bullet-char
+                         context)
           text-spacing (get formatting :text-spacing (:size formatting))]
       (+ bullet-width text-spacing))))
 
