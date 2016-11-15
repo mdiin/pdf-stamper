@@ -2,6 +2,7 @@
   (:require
     [clojure.data.xml :as xml]
 
+    [pdf-stamper.context :as context]
     [pdf-stamper.protocols :as p :refer [SelectToken]]
     [pdf-stamper.tokenizer :refer [tokenize]]
     [pdf-stamper.tokenizer.xml :as xml-tokenizer]
@@ -74,6 +75,7 @@
 ;; 3-4c
 ;;
 
+;; 4a. Take the number of tokens for which there is room in the hole
 (extend-protocol p/SelectToken
   pdf_stamper.tokenizer.tokens.Word
   (select-token [token {:as remaining-space :keys [width height]} formats context]
@@ -214,16 +216,14 @@
       (let [remaining-space {:width (- hwidth selected-width)
                              :height (- hheight selected-height)}]
         (if-let [tokens (p/select-token (first remaining) remaining-space formats context)]
-          (let [res (-> acc
-                        (update-in [:selected] into tokens)
-                        (update-in [:remaining] (partial drop 1))
-                        (update-in [:selected-width] + (p/width (first remaining) formats context))
-                        (update-in [:selected-height] maybe-inc-height tokens formats context))]
-            (recur
-              res
-              ))
-          (let [res (select-keys acc [:selected :remaining])]
-            res))))))
+          (recur (-> acc
+                     (update-in [:selected] into tokens)
+                     (update-in [:remaining] (partial drop 1))
+                     (update-in [:selected-width] + (p/width (first remaining) formats context))
+                     (update-in [:selected-height] maybe-inc-height tokens formats context)))
+          (select-keys acc [:selected :remaining]))))))
+
+;; 4b. Add those tokens to the page in that hole (use the template as the base)
 
 (defn- page-template-exists?
   "Trying to stamp a page that requests a template not in the context
@@ -238,18 +238,50 @@
           (str "No template " (:template data) " for page."))
   (:template data))
 
-(defmulti process-hole (fn [template hole data context]
+(defmulti process-hole (fn [template [hole _] context]
                          (get-in template [hole :type])))
 
 (defmethod process-hole :default
-  [template hole data context]
+  [template [hole data] context]
   [data
    (assoc-in template [hole :contents] nil)])
 
 (defmethod process-hole :parsed-text
-  [template hole data context]
+  [template [hole {:as data :keys [contents]}] context]
   (let [tokens nil
         new-data nil]
     [new-data
      (assoc-in template [hole :contents] tokens)]))
+
+(defn- contains-parsed-text-holes?
+  [data]
+  false)
+
+(defn data->pages
+  [data context]
+  (loop [pages []
+         template (:template data)
+         d data]
+    (let [processed-holes (map #(process-hole template % context) (:locations d))
+
+          ;; overflow: same format as data; {:locations {:loc-a {:content {:text ...}} :loc-c {:content {:image ...}}}}
+          overflow (apply merge (map first processed-holes))
+
+          ;; current-page: same format as template
+          current-page (apply merge (map second processed-holes))
+          overflow-template (context/get-template-overflow template context)]
+      (if (and (contains-parsed-text-holes? overflow) overflow-template)
+        (recur
+          (conj pages current-page)
+          overflow-template
+          overflow)
+        pages))))
+
+;; 4c. Drop those tokens from the data set
+
+;; 5. Repeat 3-4c for the remaining holes on the selected template
+
+;; 6. Choose a new template based on the `:overflow` key
+
+;; 7.Repeat 3-6 for the remaining data
 
