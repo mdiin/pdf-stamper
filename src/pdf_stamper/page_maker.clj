@@ -254,8 +254,10 @@
      (assoc-in template [hole :contents] tokens)]))
 
 (defn- contains-parsed-text-holes?
-  [data]
-  false)
+  [data template]
+  (some #{:parsed-text}
+        (map #(get-in template [% :type])
+             (keys (:locations data)))))
 
 (defn data->pages
   [data context]
@@ -270,12 +272,12 @@
           ;; current-page: same format as template
           current-page (apply merge (map second processed-holes))
           overflow-template (context/get-template-overflow template context)]
-      (if (and (contains-parsed-text-holes? overflow) overflow-template)
+      (if (and (contains-parsed-text-holes? overflow template) overflow-template)
         (recur
           (conj pages current-page)
           overflow-template
           overflow)
-        pages))))
+        (conj pages current-page)))))
 
 ;; 4c. Drop those tokens from the data set
 
