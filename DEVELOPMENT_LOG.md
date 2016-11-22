@@ -1,3 +1,31 @@
+# --- November 22 2016, 21:00 (BRANCH: split-wrapping-and-stamping) ---
+
+The first of the two remaining steps from last time got completed today.
+
+I noticed that templates specify holes based on even and odd pages, so that the
+`pdf-stamper.page-maker/process-hole` multimethod needs to take that into account.
+There was a major problem with that: How do we do parallel processing in the face
+of changing hole dimensions for the same holes across even/odd pages? The simple
+answer is: We don't. So I added a constraint on the template schema, such that
+the same `:parsed-text` hole must have the same dimensions on both even and odd
+pages. It is still possible to have `:parsed-text` holes on one set of pages that
+are not present on the other.
+
+After that insight, not much more was done today.
+
+## Next time I open this code base:
+
+Look in the `pdf-stamper.page-maker` namespace.
+
+1. Complete implementation of `process-hole` multimethod
+  - Each invocation must return a vector of two elements: The location data for
+    any overflow; and the page that results from processing that hole.
+
+## After that
+
+Profit! Seriously though, see notes from November 15 2016.
+
+
 # --- November 15 2016, 21:27 (BRANCH: split-wrapping-and-stamping) ---
 
 I completed the implementation of ListBullet and ListNumber, thereby copmleting
