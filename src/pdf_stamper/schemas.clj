@@ -81,6 +81,18 @@
 (def Transforms
   {:rotate (s/enum 0 90 180 270)})
 
+(defn parsed-text-holes-equal-dimensions
+  [{:keys [odd even]}]
+  (reduce
+    (fn parsed-text-holes-equal-dimensions-reduce [acc odd-hole]
+      (if-let [even-hole (first (filter #(= (:name %) (:name odd-hole)) even))]
+        (if (and (= (:height even-hole) (:height odd-hole))
+                 (= (:width even-hole) (:width odd-hole)))
+          true
+          (reduced false))
+        true))
+    odd))
+
 (def Template
   {:name s/Keyword
    (s/optional-key :overflow) s/Keyword
@@ -89,8 +101,10 @@
    (s/optional-key :transform-pages) (s/constrained {(s/optional-key :even) Transforms
                                                      (s/optional-key :odd) Transforms}
                                                     not-empty)
-   :holes {:odd [Hole]
-           :even [Hole]}})
+   :holes (s/constrained
+            {:odd [Hole]
+             :even [Hole]}
+            parsed-text-holes-equal-dimensions)})
 
 (defn validation-errors
   [template]
