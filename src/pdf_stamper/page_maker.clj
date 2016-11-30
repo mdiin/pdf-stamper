@@ -246,10 +246,23 @@
   [data
    (assoc-in template [hole :contents] nil)])
 
+(defn- dimensions
+  "Get the dimensions of hole in template. The dimensions cannot vary across
+  even and odd pages."
+  [template hole context]
+  (letfn [(template-hole
+            [side]
+            (first
+              (filter (comp (partial = hole) :name)
+                      (context/template-holes template side context))))]
+    (when-let [hole-spec (or (template-hole :even) (template-hole :odd))]
+      (select-keys hole-spec [:height :width]))))
+
 (defmethod process-hole :parsed-text
   [template [hole {:as data :keys [contents]}] context]
-  (let [tokens nil
-        new-data nil]
+  (let [{:keys [height width]} (dimensions template hole context)
+        tokens (tokenize (:text contents))
+        {:keys [selected remaining]} nil]
     [new-data
      (assoc-in template [hole :contents] tokens)]))
 
