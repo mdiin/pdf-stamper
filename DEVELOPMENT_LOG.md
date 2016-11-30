@@ -1,3 +1,18 @@
+# --- November 30 2016, 20:18 (BRANCH: split-wrapping-and-stamping) ---
+
+This time I was interrupted by the phone, so I only got 20 minutes of coding today.
+
+I completed the implementation of getting dimensions of a template hole.
+
+## Next time I open this code base:
+
+Same as last time... Hopefully this will be the last time I have to write this.
+
+## After that
+
+Again, same as last time.
+
+
 # --- November 22 2016, 21:00 (BRANCH: split-wrapping-and-stamping) ---
 
 The first of the two remaining steps from last time got completed today.
