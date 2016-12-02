@@ -1,3 +1,33 @@
+# --- December 2 2016, 22:04 (BRANCH: split-wrapping-and-stamping) ---
+
+Major insight of the day: I do not have to limit holes to the same dimensions
+across even and odd pages! Explanation follows:
+
+It is possible to process data for a PDF linearly, i.e. such that we only start
+building pages for the next piece of data once we have completely built the data
+for any previous pieces of data. That way we can know whether we should be generating
+the page using the template for even or odd.
+
+The above can become problematic if I need to parallelize page creation even
+further. Should that become necessary: Look at letting `page-maker/data->pages`
+return a pair of page-sets; one for when the first page is odd, and one for even.
+They could even be wrapped in `delay`s, to make sure not to eat too much CPU with
+unnecessary computation.
+
+The current implementation of `page-maker/data->pages` could potentially use `pmap`
+for the calls to `page-maker/process-hole`. Will need to benchmark before making
+a decision.
+
+## Next time I open this code base:
+
+Implement `page-maker/process-hole` for image and plain/non-parsed text holes.
+
+## After that
+
+1. Start building some test data for the `page-maker/data->pages` function to see
+   if it really works as expected.
+
+
 # --- November 30 2016, 20:18 (BRANCH: split-wrapping-and-stamping) ---
 
 This time I was interrupted by the phone, so I only got 20 minutes of coding today.
