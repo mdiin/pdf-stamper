@@ -246,6 +246,10 @@
             (context/template-holes template side context))))
 
 (defmulti process-hole
+  "How to process a hole depends on its type, but the result will always be a
+  pair of [overflow, current-page]. On most holes, overflow will be the same as
+  the data that comes in; the option to make it different is present for cases
+  such as parsed-text holes, where a longer text can span multiple pages."
   (fn [template [hole _] side context]
     (get-in template [hole :type])))
 
