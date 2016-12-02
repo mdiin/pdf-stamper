@@ -238,29 +238,25 @@
           (str "No template " (:template data) " for page."))
   (:template data))
 
-(defmulti process-hole (fn [template [hole _] context]
-                         (get-in template [hole :type])))
+(defn- hole-descriptor
+  "Get the hole-descriptor of hole in template."
+  [template hole side context]
+  (first
+    (filter (comp (partial = hole) :name)
+            (context/template-holes template side context))))
+
+(defmulti process-hole
+  (fn [template [hole _] side context]
+    (get-in template [hole :type])))
 
 (defmethod process-hole :default
-  [template [hole data] context]
-  [data
+  [template [hole data] side context]
+  [(hash-map hole data)
    (assoc-in template [hole :contents] nil)])
 
-(defn- dimensions
-  "Get the dimensions of hole in template. The dimensions cannot vary across
-  even and odd pages."
-  [template hole context]
-  (letfn [(template-hole
-            [side]
-            (first
-              (filter (comp (partial = hole) :name)
-                      (context/template-holes template side context))))]
-    (when-let [hole-spec (or (template-hole :even) (template-hole :odd))]
-      (select-keys hole-spec [:height :width]))))
-
 (defmethod process-hole :parsed-text
-  [template [hole {:as data :keys [contents]}] context]
-  (let [{:keys [height width]} (dimensions template hole context)
+  [template [hole {:as data :keys [contents]}] side context]
+  (let [{:keys [height width]} (hole-descriptor template hole side context)
         tokens (tokenize (:text contents))
         {:keys [selected remaining]} nil]
     [new-data
