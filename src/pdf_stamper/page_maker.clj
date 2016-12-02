@@ -260,11 +260,17 @@
 
 (defmethod process-hole :parsed-text
   [template [hole {:as data :keys [contents]}] side context]
-  (let [{:keys [height width]} (hole-descriptor template hole side context)
-        tokens (tokenize (:text contents))
-        {:keys [selected remaining]} nil]
-    [new-data
-     (assoc-in template [hole :contents] tokens)]))
+  (let [{:keys [height width format]} (hole-descriptor template hole side context)
+        tokens (if (:tokenized? (meta (:text contents)))
+                 (:text contents)
+                 (tokenize (:text contents)))
+        {:keys [selected remaining]} (split-tokens
+                                       tokens
+                                       {:hheight height :hwidth width}
+                                       format
+                                       context)]
+    [{hole {:contents {:text (vary-meta remaining assoc :tokenized? true)}}}
+     {hole {:contents selected}}]))
 
 (defn- contains-parsed-text-holes?
   [data template]
@@ -273,30 +279,35 @@
              (keys (:locations data)))))
 
 (defn data->pages
+  "Convert a single map describing a number of pages to a vector of maps
+  describing the individual pages in detail. The output pages are ready to be
+  stamped onto PDFs.
+
+  The input data must have the following keys:
+
+  - :template - Which template to use for this data
+  - :locations - Vector. What to put on the individual holes of the template
+
+  The output has the same structure."
   [data context]
   (loop [pages []
-         template (:template data)
          d data]
-    (let [processed-holes (map #(process-hole template % context) (:locations d))
+    (let [template (:template d) ;; 2.
+          page-side (if (even? (count pages)) :odd :even)
 
-          ;; overflow: same format as data; {:locations {:loc-a {:content {:text ...}} :loc-c {:content {:image ...}}}}
-          overflow (apply merge (map first processed-holes))
+          ;; 3. - 5.
+          processed-holes (map #(process-hole template % page-side context)
+                               (mapcat seq (:locations d)))
 
-          ;; current-page: same format as template
-          current-page (apply merge (map second processed-holes))
-          overflow-template (context/get-template-overflow template context)]
+          current-page {:template template
+                        :locations (map second processed-holes)}
+
+          overflow-template (context/get-template-overflow template context) ;; 6.
+          overflow {:template overflow-template
+                    :locations (map first processed-holes)}]
       (if (and (contains-parsed-text-holes? overflow template) overflow-template)
-        (recur
+        (recur ;; 7.
           (conj pages current-page)
-          overflow-template
           overflow)
         (conj pages current-page)))))
-
-;; 4c. Drop those tokens from the data set
-
-;; 5. Repeat 3-4c for the remaining holes on the selected template
-
-;; 6. Choose a new template based on the `:overflow` key
-
-;; 7.Repeat 3-6 for the remaining data
 
