@@ -1,3 +1,29 @@
+# --- December 20 2016, 20:44 (BRANCH: split-wrapping-and-stamping) ---
+
+Implemented the remaining two parts of the `page-maker/process-hole` multimethod.
+While running through some trivial and made-up data I noticed that the XML
+tokenizer did not return a vector of unnested tokens, so I fixed that.
+
+It is quite difficult to reason about whether or not the code does as is intended,
+simply because it can be hard to remember what form the various arguments can take.
+Consider using core.spec, since it will be baked into Clojure from version 1.9.
+
+Before I run along any further I should probably investigate core.spec. I have a
+feeling that just writing the specs for most of the functions will find some bugs.
+
+## Next time I open this code base:
+
+One of two possible roads open up here:
+
+1. Start spec'ing functions in the `page-maker` namespace
+2. Start implementing tests and test data for the functions in the `page-maker`
+   namespace
+
+## After that
+
+Really depends on which course of action was decided above.
+
+
 # --- December 2 2016, 22:04 (BRANCH: split-wrapping-and-stamping) ---
 
 Major insight of the day: I do not have to limit holes to the same dimensions
