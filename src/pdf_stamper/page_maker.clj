@@ -251,26 +251,39 @@
   the data that comes in; the option to make it different is present for cases
   such as parsed-text holes, where a longer text can span multiple pages."
   (fn [template [hole _] side context]
-    (get-in template [hole :type])))
+    (:type (hole-descriptor template hole side context))))
 
 (defmethod process-hole :default
   [template [hole data] side context]
   [(hash-map hole data)
-   (assoc-in template [hole :contents] nil)])
+   (hash-map hole {:contents nil})])
+
+(defmethod process-hole :image
+  [template [hole {:as data :keys [contents]}] side context]
+  [(hash-map hole data)
+   (hash-map hole {:contents (:image contents)})])
+
+(defmethod process-hole :text
+  [template [hole {:as data :keys [contents]}] side context]
+  (let [text-contents (if (:tokenized? (meta (:text contents)))
+                        (:text contents)
+                        (tokenize (xml/parse-str (:text contents))))]
+    [(hash-map hole (assoc-in data [:contents :text] (vary-meta text-contents assoc :tokenized? true)))
+     (hash-map hole {:contents text-contents})]))
 
 (defmethod process-hole :parsed-text
   [template [hole {:as data :keys [contents]}] side context]
   (let [{:keys [height width format]} (hole-descriptor template hole side context)
         tokens (if (:tokenized? (meta (:text contents)))
                  (:text contents)
-                 (tokenize (:text contents)))
+                 (tokenize (xml/parse-str (:text contents))))
         {:keys [selected remaining]} (split-tokens
                                        tokens
                                        {:hheight height :hwidth width}
                                        format
                                        context)]
-    [{hole {:contents {:text (vary-meta remaining assoc :tokenized? true)}}}
-     {hole {:contents selected}}]))
+    [(hash-map hole (assoc-in data [:contents :text] (vary-meta remaining assoc :tokenized? true)))
+     (hash-map hole {:contents selected})]))
 
 (defn- contains-parsed-text-holes?
   [data template]
