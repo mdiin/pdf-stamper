@@ -1,7 +1,7 @@
 (ns pdf-stamper.tokenizer.xml
   (:require
     [clojure.data.xml :as xml]
-    
+
     [pdf-stamper.tokenizer :refer [Tokenizable tokenize]]
     [pdf-stamper.tokenizer.standard :as standard-tokenizers]
     [pdf-stamper.tokenizer.tokens :as token]))
@@ -10,9 +10,10 @@
   [elm-type]
   (fn [content style]
     (let [new-style (assoc style :format elm-type)]
-      [(token/->ParagraphBegin new-style)
-       (tokenize content new-style)
-       (token/->ParagraphEnd new-style)])))
+      (-> []
+          (conj (token/->ParagraphBegin new-style))
+          (into (flatten (tokenize content new-style)))
+          (conj (token/->ParagraphEnd new-style)))))
 
 (def t-paragraph (t-paragraph-elm :paragraph))
 (def t-head-1 (t-paragraph-elm :head-1))
