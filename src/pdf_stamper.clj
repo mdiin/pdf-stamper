@@ -238,6 +238,29 @@
                     (conj (fill-page document overflow-page-data context) template-doc)
                     [template-doc])))))))
 
+(defn fill-page-2
+  [document page context]
+  )
+
+(defn keep-page?
+  "TODO"
+  [page]
+  true)
+
+(defn add-filler
+  "TODO"
+  [page]
+  [page])
+
+(defn annotate-side
+  "TODO"
+  [pages]
+  (reduce (fn [acc page]
+            (let [side (if (even? (count acc))
+                         :odd
+                         :even)]
+              (conj acc (assoc page :side side))))))
+
 (defn fill-pages
   "When the context is populated with fonts and templates, this is the
   function to call. The data passed in as the first argument is a description
@@ -257,15 +280,20 @@
   The completed document is written to the resulting
   `java.io.ByteArrayOutputStream`, ready to be sent over the network or
   written to a file using a `java.io.FileOutputStream`."
-  [pages context]
+  [data context]
   (let [output (java.io.ByteArrayOutputStream.)]
     (with-open [document (PDDocument.)]
       (let [context-with-embedded-fonts (reduce (fn [context [font style]]
                                                   (context/embed-font document font style context))
                                                 context
                                                 (:fonts-to-embed context))
-            wrapped-pages nil
-            open-documents (doall (map #(fill-page document % context-with-embedded-fonts) pages))]
+            pages (->> data
+                       (mapcat #(page-maker/data->pages % context-with-embedded-fonts))
+                       (filter keep-page?)
+                       (map add-filler)
+                       (flatten)
+                       (annotate-side))
+            open-documents (doall (map #(fill-page-2 document % context-with-embedded-fonts) pages))]
         (.save document output)
         (doseq [doc (flatten open-documents)]
           (.close doc))))
