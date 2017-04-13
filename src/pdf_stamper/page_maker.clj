@@ -10,7 +10,6 @@
 
 ;; The general algorithm for building pages:
 ;;
-;; 0. Tokenize the `:parsed-text` for all pieces of data
 ;; 1. Take a piece of data
 ;; 2. Take the template to use for that data
 ;; 3. Choose a hole in that template
@@ -45,30 +44,6 @@
 ;;                       | Pages |
 ;;                       \-------/
 ;;
-
-;; Build data:
-;;
-;; 1. Tokenize all text holes in all pieces of data
-;;
-
-(def test-data
-  {:locations {:a {:contents {:image nil}}
-               :b {:contents {:text "<bbb><p>abc</p></bbb>"}}}})
-
-(defn- tokenize-xml-contents
-  [location]
-  (let [[loc-name content-map] location]
-    (if-let [xml-str (get-in content-map [:contents :text])]
-      {loc-name (update-in content-map [:contents :text] (comp flatten tokenize xml/parse-str))}
-      {loc-name content-map})))
-
-(defn- process-one-data
-  [data]
-  (update-in data [:locations] #(into {} (map tokenize-xml-contents (seq %)))))
-
-(defn- process-all-data
-  [ds]
-  (map process-one-data ds))
 
 ;; Fill holes in page, respecting space constraints
 ;;
