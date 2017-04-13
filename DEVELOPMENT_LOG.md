@@ -1,3 +1,16 @@
+# --- April 13 2017, 15:00 (BRANCH: split-wrapping-and-stamping) ---
+
+Removed a lot of code from the old implementation, and started implementing the
+data-driven stamping flow.
+
+I decided to skip over the parts from "Next time I open this code base" because
+I was in a place with no internet access, and hence couldn't experiment with spec
+or tests properly.
+
+## Next time I open this code base:
+
+Finish the implementation of the flow.
+
 # --- December 20 2016, 20:44 (BRANCH: split-wrapping-and-stamping) ---
 
 Implemented the remaining two parts of the `page-maker/process-hole` multimethod.
