@@ -5,7 +5,6 @@
     [pdf-stamper.context :as context]
     [pdf-stamper.protocols :as p :refer [SelectToken]]
     [pdf-stamper.tokenizer :refer [tokenize]]
-    [pdf-stamper.tokenizer.xml :as xml-tokenizer]
     [pdf-stamper.tokenizer.tokens :as t]))
 
 ;; The general algorithm for building pages:

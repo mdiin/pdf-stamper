@@ -17,7 +17,6 @@
 
 (ns pdf-stamper.text
   (:require
-    [pdf-stamper.text.parsed :as parsed-text]
     [pdf-stamper.text.pdfbox :as pdf]))
 
 (defn fill-text-parsed
@@ -57,17 +56,12 @@
   a standard character is used."
   [document c-stream data context]
   (let [formatting (merge (:format data)
-                          (select-keys data [:width :height]))
-        [paragraphs overflow] (parsed-text/paragraphs-overflowing
-                                (get-in data [:contents :text])
-                                formatting
-                                context)]
+                          (select-keys data [:width :height]))]
     (-> c-stream
         (pdf/begin-text-block)
         (pdf/set-text-position (:x data) (+ (:y data) (:height formatting)))
-        (pdf/write-paragraphs formatting paragraphs context)
-        (pdf/end-text-block))
-    (parsed-text/handle-overflow overflow (:name data))))
+        (pdf/write-paragraphs formatting data context)
+        (pdf/end-text-block))))
 
 (defn fill-text
   "### Text holes
@@ -76,7 +70,7 @@
   in the `:paragraph` key of the `:format` map. Aditionally alignment of the text is controllable using the `:align` key: a map with the keys `:horizontal`
   and `:vertical`. The possible values for horizontal alignment are `:left`, `:right`, and `:center`; the possible values for vertical alignment are
   `:top`, `:bottom`, and `:center`.
-  
+
   To keep the promise that there is not text outside the specified box, pdf-stamper automatically resizes lines that are too long."
   [document c-stream data context]
   (let [formatting (merge (:format data)

@@ -13,8 +13,8 @@
   (:require
     [pdf-stamper.context :as context]
     [pdf-stamper.text :as text]
-    [pdf-stamper.text.parsed :as parsed-text]
     [pdf-stamper.images :as images]
+    [pdf-stamper.page-maker :as page-maker]
     [potemkin])
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
@@ -97,7 +97,7 @@
   [document c-stream hole location-data context]
   (let [data (update-in (merge hole location-data)
                         [:contents :text]
-                        #(if (string? %) (parsed-text/get-paragraph-nodes %) %))]
+                        #(if (string? %) % %))]
     (text/fill-text-parsed document
                            c-stream
                            data
@@ -247,19 +247,36 @@
   [page]
   true)
 
+(defn strip-pages
+  [pages]
+  (reduce (fn [acc page]
+            (let [template (context/template (:template page))]
+              (if (skip-page? template (count acc))
+                acc
+                (conj acc page))))
+          []
+          pages))
+
 (defn add-filler
   "TODO"
   [page]
   [page])
 
 (defn annotate-side
-  "TODO"
   [pages]
   (reduce (fn [acc page]
             (let [side (if (even? (count acc))
                          :odd
                          :even)]
-              (conj acc (assoc page :side side))))))
+              (conj acc (assoc page :side side))))
+          []
+          pages))
+
+(comment
+  (let [pages [{} {} {}]
+        annotated-pages (annotate-side pages)]
+    (= [{:side :odd} {:side :even} {:side :odd}]
+       annotated-pages)))
 
 (defn fill-pages
   "When the context is populated with fonts and templates, this is the
@@ -289,7 +306,7 @@
                                                 (:fonts-to-embed context))
             pages (->> data
                        (mapcat #(page-maker/data->pages % context-with-embedded-fonts))
-                       (filter keep-page?)
+                       (strip-pages)
                        (map add-filler)
                        (flatten)
                        (annotate-side))
