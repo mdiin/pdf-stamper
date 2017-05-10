@@ -80,7 +80,7 @@
 (def Transforms
   {:rotate (s/enum 0 90 180 270)})
 
-(def Template
+(def FullTemplate
   {:name s/Keyword
    (s/optional-key :overflow) s/Keyword
    (s/optional-key :only-on) {:pages (s/enum :even :odd)
@@ -91,7 +91,25 @@
    :holes {:odd [Hole]
            :even [Hole]}})
 
+(def PartialsTemplate
+  {:name s/Keyword
+   :parts [s/Keyword]})
+
+(def Template
+  (s/conditional
+    #(:parts %) PartialsTemplate
+    #(:holes %) FullTemplate
+    'is-partials-or-full-template))
+
 (defn validation-errors
   [template]
   (s/check Template template))
+
+(def TemplatePartial
+  {:name s/Keyword
+   :part [s/Any]})
+
+(defn validation-errors-partial
+  [template-partial]
+  (s/check TemplatePartial template-partial))
 

@@ -1,0 +1,26 @@
+{:name :b
+ :part [{:name :centered-image
+         :y 10.0
+         :priority 1}
+
+        {:name :centered-text
+         :y 10.0
+         :priority 2}
+
+        {:name :top-image
+         :y 70.0
+         :priority 1}
+
+        {:name :top-text
+         :y 70.0
+         :priority 2}
+
+        {:name :bottom-image
+         :y 130.0
+         :priority 1}
+
+        {:name :bottom-text
+         :y 130.0
+         :priority 2}
+        ]}
+

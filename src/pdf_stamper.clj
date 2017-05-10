@@ -120,6 +120,7 @@
 (potemkin/import-vars
   [pdf-stamper.context
    add-template
+   add-template-partial
    add-font
    base-context])
 
