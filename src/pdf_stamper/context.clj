@@ -82,9 +82,12 @@
      [:templates (:name template-def)]
      (if (:parts template-def)
        (delay
-         (let [computed-template-def (-> template-def
+         (let [modification-fn (:modification-fn template-def)
+               computed-template-def (-> template-def
                                          (merge-parts f context)
-                                         (dissoc :parts))]
+                                         (dissoc :parts)
+                                         (dissoc :modification-fn)
+                                         (modification-fn))]
            (when-let [schema-check (schemas/validation-errors computed-template-def)]
              (throw (ex-info (str schema-check " | IN: " template-def) schema-check)))
            (-> computed-template-def

@@ -16,7 +16,7 @@
 (def context (->> base-context
                   (add-template-partial partial-1)
                   (add-template-partial partial-2)
-                  (add-template template-1 template-pdf-1)))
+                  (add-template (assoc template-1 :modification-fn identity) template-pdf-1)))
 
 (def pages
   [{:template :template-1

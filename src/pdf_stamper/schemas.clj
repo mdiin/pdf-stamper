@@ -93,6 +93,7 @@
 
 (def PartialsTemplate
   {:name s/Keyword
+   (s/optional-key :modification-fn) s/Any
    :parts [s/Keyword]})
 
 (def Template
