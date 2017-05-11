@@ -36,13 +36,17 @@
 (defn merge-parts
   "Merges the part templates in template-def to a complete template structure
   using f to merge values."
-  [template-def f context]
-  (let [parts (map #(template-partial % context) (:parts template-def))
+  [template-def f context & {:keys [?validation-error-fn]}]
+  (let [valid-hole? (if ?validation-error-fn
+                      #(schemas/valid-hole? % ?validation-error-fn)
+                      schemas/valid-hole?)
+        parts (map #(template-partial % context) (:parts template-def))
         holes (into []
-                    (map (partial apply f)
-                         (vals
-                           (group-by :name
-                                     (flatten parts)))))]
+                    (filter valid-hole?
+                            (map (partial apply f)
+                                 (vals
+                                   (group-by :name
+                                             (flatten parts))))))]
     (-> template-def
         (assoc-in [:holes :odd] holes)
         (assoc-in [:holes :even] holes))))
@@ -78,11 +82,14 @@
      [:templates (:name template-def)]
      (if (:parts template-def)
        (delay
-         (-> template-def
-             (merge-parts f context)
-             (dissoc :parts)
-             (assoc-in [:uri :odd] odd-template-uri)
-             (assoc-in [:uri :even] even-template-uri)))
+         (let [computed-template-def (-> template-def
+                                         (merge-parts f context)
+                                         (dissoc :parts))]
+           (when-let [schema-check (schemas/validation-errors computed-template-def)]
+             (throw (ex-info (str schema-check " | IN: " template-def) schema-check)))
+           (-> computed-template-def
+               (assoc-in [:uri :odd] odd-template-uri)
+               (assoc-in [:uri :even] even-template-uri))))
        (-> template-def
            (assoc-in [:uri :odd] odd-template-uri)
            (assoc-in [:uri :even] even-template-uri))))))
