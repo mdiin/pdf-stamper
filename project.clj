@@ -13,6 +13,15 @@
                  ]
   :deploy-repositories [["releases" :clojars]]
   :source-paths ["src"]
+  :release-tasks [["vcs" "assert-committed"]
+                  ["change" "version"
+                   "leiningen.release/bump-version" "release"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag" "--no-sign"]
+                  ["deploy"]
+                  ["change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["vcs" "push"]]
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.8.0"]]}
              :test {:dependencies [[org.clojure/clojure "1.7.0"]
                                    [org.clojure/test.check "0.9.0"]
