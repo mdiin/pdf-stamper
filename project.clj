@@ -13,7 +13,8 @@
                  ]
   :deploy-repositories [["releases" :clojars]]
   :source-paths ["src"]
-  :profiles {:test {:dependencies [[org.clojure/clojure "1.7.0"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.8.0"]]}
+             :test {:dependencies [[org.clojure/clojure "1.7.0"]
                                    [org.clojure/test.check "0.9.0"]
                                    [org.clojure/tools.nrepl "0.2.12"]]
                     :source-paths ["test"]}

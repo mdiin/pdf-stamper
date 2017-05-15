@@ -22,36 +22,101 @@
   "There are no standard templates in pdf-stamper."
   {})
 
+(defn template
+  [template-name context]
+  (let [t (get-in context [:templates template-name])]
+    (if (delay? t)
+      @t
+      t)))
+
+(defn template-partial
+  [p context]
+  (get-in context [:partials p]))
+
+(defn merge-parts
+  "Merges the part templates in template-def to a complete template structure
+  using f to merge values."
+  [template-def f context & {:keys [?validation-error-fn]}]
+  (let [valid-hole? (if ?validation-error-fn
+                      #(schemas/valid-hole? % ?validation-error-fn)
+                      schemas/valid-hole?)
+        parts (map #(template-partial % context) (:parts template-def))
+        holes (into []
+                    (filter valid-hole?
+                            (map (partial apply f)
+                                 (vals
+                                   (group-by :name
+                                             (flatten parts))))))]
+    (-> template-def
+        (assoc-in [:holes :odd] holes)
+        (assoc-in [:holes :even] holes))))
+
 (defn add-template
   "Adding templates to the context is achieved using this function.
   When adding a template two things are needed: The template description,
   i.e. what goes where, and a locator for the PDF page to use with the
   template description. The template locator can be either a URL or a string.
-  
+
   [template-def template-uri context]
   Use the same template locator for both even and odd pages.
-  
+
   [template-def odd-template-uri even-template-uri context]
-  Use a different template locator for even and odd pages."
+  Use a different template locator for even and odd pages.
+
+  f can optionally be supplied, and will be used to merge the partials
+  if template-def is composed of partial templates. The default is to use
+  clojure.core/merge."
   ([template-def template-uri context]
    (add-template template-def template-uri template-uri context))
 
   ([template-def odd-template-uri even-template-uri context]
+   (add-template template-def merge odd-template-uri even-template-uri context))
+
+  ([template-def f odd-template-uri even-template-uri context]
    {:pre [(some? odd-template-uri)
           (some? even-template-uri)]}
    (when-let [schema-check (schemas/validation-errors template-def)]
      (throw (ex-info (str schema-check " | IN: " template-def) schema-check)))
-   (-> context
-       (assoc-in [:templates (:name template-def)] template-def)
-       (assoc-in [:templates (:name template-def) :uri :odd] odd-template-uri)
-       (assoc-in [:templates (:name template-def) :uri :even] even-template-uri))))
+   (assoc-in
+     context
+     [:templates (:name template-def)]
+     (if (:parts template-def)
+       (delay
+         (let [modification-fn (:modification-fn template-def)
+               computed-template-def (-> template-def
+                                         (merge-parts f context)
+                                         (dissoc :parts)
+                                         (dissoc :modification-fn)
+                                         (modification-fn))]
+           (when-let [schema-check (schemas/validation-errors computed-template-def)]
+             (throw (ex-info (str schema-check " | IN: " template-def) schema-check)))
+           (-> computed-template-def
+               (assoc-in [:uri :odd] odd-template-uri)
+               (assoc-in [:uri :even] even-template-uri))))
+       (-> template-def
+           (assoc-in [:uri :odd] odd-template-uri)
+           (assoc-in [:uri :even] even-template-uri))))))
+
+(defn add-template-partial
+  "Template partials are much like templates, except they cannot be used as templates
+  on their own; their purpose is to act as the base for actual templates to build
+  upon. Adding a template with the key :pdf-stamper.templates/parts as a vector of part
+  names will merge the required parts into a final template."
+  [partial-def context]
+  (when-let [schema-check (schemas/validation-errors-partial partial-def)]
+    (throw (ex-info (str schema-check " | IN: " partial-def) schema-check)))
+  (assoc-in
+    context
+    [:partials (:name partial-def)]
+    (:part partial-def)))
 
 (defn template-document
   "The template file is loaded lazily, i.e. it is not until a page actually
   requests to be written using the added template that it is read to memory."
-  [template side context]
-  (let [file-uri (get-in context [:templates template :uri side])]
-    (assert file-uri (str "file-uri is nil for template " template))
+  [template-name side context]
+  (let [t (template template-name context)
+        file-uri (get-in t [:uri side])]
+    (assert file-uri (str "file-uri is nil for template " template-name " on side " side))
     (PDDocument/load file-uri)))
 
 (defn template-document-even
@@ -62,29 +127,27 @@
   [template context]
   (template-document template :odd context))
 
-(defn template
-  [template context]
-  (get-in context [:templates template]))
-
 (defn template-holes
   "Any template consists of a number of holes specifying the size and shape
   of data when stamped onto the template PDF page."
-  [template side context]
-  (get-in context [:templates template :holes side]))
+  [template-name side context]
+  (let [t (template template-name context)]
+    (get-in t [:holes side])))
 
 (defn template-holes-even
-  [template context]
-  (template-holes template :even context))
+  [template-name context]
+  (template-holes template-name :even context))
 
 (defn template-holes-odd
-  [template context]
-  (template-holes template :odd context))
+  [template-name context]
+  (template-holes template-name :odd context))
 
 (defn get-template-overflow
   "Templates can specify an overflow template, a template that will be used
   for any data that did not fit in the holes on the original template's page."
-  [template context]
-  (get-in context [:templates template :overflow]))
+  [template-name context]
+  (let [t (template template-name context)]
+    (:overflow t)))
 
 ;; ## Fonts
 ;;
@@ -152,7 +215,7 @@
   unmodified. In practice this situation is highly unlikely, and the check is
   primarily in place to prevent unanticipated crashes (in case code external to
   pdf-stamper modified the context).
-  
+
   The font descriptor is coerced to an input stream and loaded into the document,
   after which it is automatically closed."
   [doc font style context]
@@ -164,7 +227,7 @@
 (defn get-font
   "When a font has been added to the context and embedded in a document, it can
   be queried by providing the font name and style.
- 
+
   It is guaranteed that a font is always found. Thus, if no font with the given
   name is registered the default font (Times New Roman) is used with the supplied
   style. If again no font is found, the default font and style are used (Times New

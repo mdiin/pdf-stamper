@@ -114,12 +114,13 @@
 ;; ## The Context
 ;;
 ;; The context is the datastructure that contains additional data needed by pdf-stamper. For now that is fonts and templates (both descriptions and files).
-;; This namespace contains referrals to the three important user-facing functions from the context namespace, namely `add-template`, `add-font`, and `base-context`.
-;; For a detailed write-up on the context, please refer to the namespace documentation.
+;; This namespace contains referrals to the four important user-facing functions from the context namespace, namely `add-template`, `add-template-partial`,
+;; `add-font`, and `base-context`. For a detailed write-up on the context, please refer to the namespace documentation.
 
 (potemkin/import-vars
   [pdf-stamper.context
    add-template
+   add-template-partial
    add-font
    base-context])
 

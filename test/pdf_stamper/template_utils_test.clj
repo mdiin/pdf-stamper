@@ -2,7 +2,7 @@
   (:require
     [pdf-stamper.schemas :as schemas]
     [pdf-stamper.template-utils :refer :all]
-    
+
     [clojure.test :as t :refer [deftest is testing]]
     [clojure.test.check.properties :refer [for-all]]
     [clojure.test.check.generators :as gen]
@@ -15,11 +15,7 @@
 ;;
 ;; Values are vectors of holes.
 
-(def value (gen/vector
-             (gen/let [hole (schema-generators/generator schemas/Hole)
-                       name (gen/elements ["a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k"])]
-               (assoc hole
-                      :name name))))
+(def value (gen/vector gen/keyword))
 
 ;; ## Non-variadic parts
 ;;
@@ -73,7 +69,7 @@
                 expected))
             1
             parts)
-    0))
+    1))
 
 (defn dominating-value
   [name l]
@@ -110,25 +106,4 @@
     (let [templates (make-templates naming-scheme ps)]
       (= (count templates)
          (expected-number-of-templates ps)))))
-
-;; ## path-to-template
-;;
-;; We test that `path-to-template` merges in the correct order, giving most weight to values
-;; close to the leaves.
-
-(defspec merges-in-leaf-to-root-order
-  {:max-size 8
-   :num-tests 200}
-  (for-all [[naming-scheme ps] parts]
-    (let [first-tree ((comp first parts->trees) ps)
-          first-paths (if first-tree
-                        (tree-paths first-tree)
-                        [])]
-      (reduce (fn [_ hole]
-                (let [dominating-hole (dominating-value (:name hole) first-paths)]
-                  (if (key-value-eq? hole dominating-hole)
-                    true
-                    (reduced false))))
-                 true
-                 (:holes (path-to-template naming-scheme first-paths))))))
 
