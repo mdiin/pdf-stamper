@@ -13,7 +13,7 @@
   (:require
     [pdf-stamper.schemas :as schemas]
 
-    [clojure.zip :as zip]
+    [clojure.set :as sets]
     ))
 
 (defn sub-roots
@@ -21,8 +21,8 @@
   [tree]
   (if-let [variants (::variants tree)]
     (let [roots (->> variants
-                     (map #(clojure.set/rename-keys % {::variant-name :name
-                                                       ::variant-part :part}))
+                     (map #(sets/rename-keys % {::variant-name :name
+                                                ::variant-part :part}))
                      (map #(assoc % :key (::name tree)))
                      (#(if (::optional? tree)
                          (conj % {:key (::name tree) :name ""})
