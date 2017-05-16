@@ -4,6 +4,8 @@
 
 (ns pdf-stamper.images
   (:import
+    [java.lang UnsupportedOperationException]
+    [java.io IOException]
     [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel.edit PDPageContentStream]
     [org.apache.pdfbox.pdmodel.graphics.xobject PDJpeg PDXObjectImage PDPixelMap]))
@@ -18,7 +20,7 @@
   The arguments are passed as a map to provide some context to
   the four numbers, as it is otherwise too easy to mix up the
   parameters when applying this function.
-  
+
   *Future*: Going by the description above it should be possible
   to refactor this to compute both scaling factors up front, and
   simply use the largest."
@@ -58,6 +60,20 @@
   (let [{:keys [x y width height]} data]
     (.. c-stream (drawXObject image x y width height))))
 
+(defn- embed-image
+  "Try to embed image in document. Will try various image classes
+  to avoid throwing exceptions, but no guarantees are made."
+  [document image quality & {:keys [log-error]}]
+  (try
+    (PDJpeg. document image quality)
+    (catch UnsupportedOperationException e
+      (PDPixelMap. document image))
+    (catch Exception e
+      (when log-error
+        (log-error {:description "Error embedding image in document."
+                    :exception e}))
+      (throw e))))
+
 (defn fill-image
   "When stamping an image, the image is always shrunk to fit the
   dimensions of the hole. The value of the `:aspect` key in `data`
@@ -68,14 +84,17 @@
   It is possible to specify the quality of the stamped image by
   setting the `:quality` key to a value between `0.0` and `1.0`. The
   default quality if not specified is `0.75`.
-  
+
   *Note*: Using `PDJpeg` does not cancel out support for PNGs. It
   seems that the PNGs are internally converted to JPEGs (**TO BE
   CONFIRMED**)."
-  [document c-stream data context]
+  [document c-stream data context & {:keys [log-error]}]
   (let [aspect-ratio (get data :aspect :preserve)
         image-quality (get data :quality 0.75)
-        image (PDJpeg. document (get-in data [:contents :image]) image-quality)]
+        image (embed-image document (get-in data [:contents :image]) image-quality :log-error (fn [msg]
+                                                                                                (log-error (assoc msg :hole-name (:name data)))))]
+    (when-not image
+      (log-error {:description (str "No image present for hole " (:name data))}))
     (assert image "Image must be present in hole contents.")
     (condp = aspect-ratio
       :preserve (draw-image-preserve-aspect c-stream image data)

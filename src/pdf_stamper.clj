@@ -42,7 +42,7 @@
 
   If a hole type should be able to overflow, the return value from a call to `fill-hole` must
   be a map of the form `{<hole name> {:contents ...}}`."
-  (fn [document c-stream hole location-data context] (:type hole)))
+  (fn [document c-stream hole location-data context & opts] (:type hole)))
 
 ;; All holes have these fields in common:
 ;;
@@ -69,12 +69,13 @@
   before returning the resulting seq of overflowing holes.
 
   *Note*: Holes where the page does not contain data will be skipped."
-  [document c-stream holes page-data context]
+  [document c-stream holes page-data context & {:keys [log-error]}]
   (doall
     (into {}
           (map (fn [hole]
                  (when-let [location-data (get-in page-data [:locations (:name hole)])]
-                   (fill-hole document c-stream hole location-data context)))
+                   (fill-hole document c-stream hole location-data context
+                              :log-error log-error)))
                (sort-by :priority holes)))))
 
 ;; The types supported out of the box are:
@@ -86,15 +87,16 @@
 ;; For specifics on the hole types supported out of the box, see the documentation for their respective namespaces.
 
 (defmethod fill-hole :image
-  [document c-stream hole location-data context]
+  [document c-stream hole location-data context & {:keys [log-error]}]
   (let [data (merge hole location-data)]
     (images/fill-image document
                        c-stream
                        data
-                       context)))
+                       context
+                       :log-error log-error)))
 
 (defmethod fill-hole :text-parsed
-  [document c-stream hole location-data context]
+  [document c-stream hole location-data context & opts]
   (let [data (update-in (merge hole location-data)
                         [:contents :text]
                         #(if (string? %) (parsed-text/get-paragraph-nodes %) %))]
@@ -104,7 +106,7 @@
                            context)))
 
 (defmethod fill-hole :text
-  [document c-stream hole location-data context]
+  [document c-stream hole location-data context & opts]
   (let [data (merge hole location-data)]
     (text/fill-text document
                     c-stream
@@ -203,7 +205,7 @@
   *Future*: It would probably be wise to find a better way than a direct
   recursive call to handle overflows. Otherwise handling large bodies of
   text could become a problem."
-  [document page-data context]
+  [document page-data context & {:keys [log-error]}]
   (assert (page-template-exists? page-data context)
           (str "No template " (:template page-data) " for page."))
   (let [template (context/template (:template page-data) context)]
@@ -225,7 +227,11 @@
             template-page (-> template-doc (.getDocumentCatalog) (.getAllPages) (.get 0))
             template-c-stream (PDPageContentStream. document template-page true false)]
         (.addPage document template-page)
-        (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
+        (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context
+                                    :log-error (fn [msg]
+                                                 (log-error (assoc msg
+                                                                   :template (:template page-data)
+                                                                   :page-num (inc (.getNumberOfPages document))))))
               overflow-page-data {:template template-overflow
                                   :locations (when (seq overflows)
                                                (merge (:locations page-data) overflows))}]
@@ -258,14 +264,16 @@
   The completed document is written to the resulting
   `java.io.ByteArrayOutputStream`, ready to be sent over the network or
   written to a file using a `java.io.FileOutputStream`."
-  [pages context]
+  [pages context & {:keys [log-error]}]
   (let [output (java.io.ByteArrayOutputStream.)]
     (with-open [document (PDDocument.)]
       (let [context-with-embedded-fonts (reduce (fn [context [font style]]
                                                   (context/embed-font document font style context))
                                                 context
                                                 (:fonts-to-embed context))
-            open-documents (doall (map #(fill-page document % context-with-embedded-fonts) pages))]
+            open-documents (doall (map #(fill-page document % context-with-embedded-fonts
+                                                   :log-error log-error)
+                                       pages))]
         (.save document output)
         (doseq [doc (flatten open-documents)]
           (.close doc))))
