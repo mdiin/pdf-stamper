@@ -160,13 +160,6 @@
       :default
       nil)))
 
-(defn- transform-page-with
-  "Returns a map of transforms to apply on the page, or nil if none apply."
-  [template number-of-pages]
-  (if (even? number-of-pages)
-    (get-in template [:transform-pages :even])
-    (get-in template [:transform-pages :odd])))
-
 (defmulti transform
   "Apply transformation to a page. Transform is a vector `[:transform-name args]`"
   (fn [page transform]
@@ -182,65 +175,32 @@
 ;; easier to read we name it.
 
 (defn- page-template-exists?
-  [page-data context]
-  (get-in context [:templates (:template page-data)]))
+  [page context]
+  (get-in context [:templates (:template page)]))
 
-(defn- fill-page
-  "Every single page is passed through this function, which extracts
-  the relevant template and description for the page data, adds it to
-  the document being built, and delegates the actual work to the hole-
-  filling functions defined above.
-
-  The template to use is extracted from the page data. Using this the
-  available holes, template PDF page, and template to use with overflowing
-  holes (if any) are extracted from the context.
-
-  Any overflowing holes are handled by calling recursively with the
-  overflow. All other holes are copied as-is to the new page, to make
-  repeating holes possible.
-
-  *Future*: It would probably be wise to find a better way than a direct
-  recursive call to handle overflows. Otherwise handling large bodies of
-  text could become a problem."
-  [document page-data context]
-  (assert (page-template-exists? page-data context)
-          (str "No template " (:template page-data) " for page."))
-  (let [template (context/template (:template page-data) context)]
-    (if (skip-page? template (inc (.getNumberOfPages document)))
-      []
-      (let [fill-page-vec (when-let [filler (insert-before template (inc (.getNumberOfPages document)))]
-                            (assert filler)
-                            (let [filler-data {:template filler
-                                               :locations (:filler-locations page-data)}]
-                              (fill-page document filler-data context)))
-            template-overflow (:overflow template)
-            template-transforms (:transform-pages template)
-            template-holes (if (odd? (inc (.getNumberOfPages document)))
-                             (context/template-holes-odd (:template page-data) context)
-                             (context/template-holes-even (:template page-data) context))
-            template-doc (if (odd? (inc (.getNumberOfPages document)))
-                           (context/template-document-odd (:template page-data) context)
-                           (context/template-document-even (:template page-data) context))
-            template-page (-> template-doc (.getDocumentCatalog) (.getAllPages) (.get 0))
-            template-c-stream (PDPageContentStream. document template-page true false)]
-        (.addPage document template-page)
-        (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
-              overflow-page-data {:template template-overflow
-                                  :locations (when (seq overflows)
-                                               (merge (:locations page-data) overflows))}]
-          (when-let [transforms (transform-page-with template (.getNumberOfPages document))]
-            (doseq [t transforms]
-              (transform template-page t)))
-          (.close template-c-stream)
-          (concat fill-page-vec
-                  (if (and (seq (:locations overflow-page-data))
-                           (:template overflow-page-data))
-                    (conj (fill-page document overflow-page-data context) template-doc)
-                    [template-doc])))))))
-
-(defn fill-page-2
+(defn fill-page
   [document page context]
-  )
+  (assert (page-template-exists? page context)
+          (str "No template " (:template page) " for page."))
+  (let [template (context/template (:template page) context)
+        template-transforms (condp = (::side page)
+                              ::even (get-in template [:transform-pages :even])
+                              ::odd (get-in template [:transform-pages :odd]))
+        template-holes (condp = (::side page)
+                         ::even (context/template-holes-even (:template page) context)
+                         ::odd (context/template-holes-odd (:template page) context))
+        template-doc (condp = (::side page)
+                       ::even (context/template-document-even (:template page) context)
+                       ::odd (context/template-document-odd (:template page) context))
+        template-page (.. template-doc (getDocumentCatalog) (getAllPages) (get 0))
+        template-c-stream (PDPageContentStream. document template-page true false)]
+    (.addPage document template-page)
+    (fill-holes document template-c-stream (sort-by :priority template-holes) page context)
+    (when template-transforms
+      (doseq [t template-transforms]
+        (transform template-page t)))
+    (.close template-c-stream)
+    template-doc))
 
 (defn page-transducer
   [f context]
@@ -342,7 +302,7 @@
                           (add-filler context-with-embedded-fonts)
                           (annotate-side context-with-embedded-fonts))
                         data)
-            open-documents (doall (map #(fill-page-2 document % context-with-embedded-fonts) pages))]
+            open-documents (doall (map #(fill-page document % context-with-embedded-fonts) pages))]
         (.save document output)
         (doseq [doc (flatten open-documents)]
           (.close doc))))
