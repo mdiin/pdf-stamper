@@ -11,7 +11,7 @@
 (def template-pdf-1 "test/templates/align_single/template-1.pdf")
 
 (def background (javax.imageio.ImageIO/read (clojure.java.io/as-file "test/templates/align_single/background.png")))
-(def text "Ålquiver")
+(def text "<p>Ålquiver</p>")
 
 (def context (->> base-context
                   (add-template template-1 template-pdf-1)))
