@@ -1,3 +1,12 @@
+# --- January 4 2018, 22:12 (BRANCH: split-wrapping-and-stamping) ---
+
+Implemented the remaining flow functions. I noticed a lot of similarity in their
+implementations, which allowed for a one-pass transducer implementation.
+
+## Next time I open this code base:
+
+Implement the `fill-page-2` function.
+
 # --- April 13 2017, 15:00 (BRANCH: split-wrapping-and-stamping) ---
 
 Removed a lot of code from the old implementation, and started implementing the
