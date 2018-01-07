@@ -1,29 +1,57 @@
 {:name :template-1
- :holes [{:name :one
-          :height 351.0
-          :width 220
-          :x 0.0
-          :y 0.0
-          :type :image
-          :aspect :preserve
-          :priority 1}
+ :holes {:even [{:name :one
+                 :height 351.0
+                 :width 220
+                 :x 0.0
+                 :y 0.0
+                 :type :image
+                 :aspect :preserve
+                 :priority 1}
 
-         {:name :two
-          :height 351.0
-          :width 220
-          :x 0.0
-          :y 0.0
-          :type :image
-          :aspect :preserve
-          :quality 0.5
-          :priority 2}
+                {:name :two
+                 :height 351.0
+                 :width 220
+                 :x 0.0
+                 :y 0.0
+                 :type :image
+                 :aspect :preserve
+                 :quality 0.5
+                 :priority 2}
 
-         {:name :three
-          :height 351.0
-          :width 220
-          :x 0.0
-          :y 0.0
-          :type :image
-          :aspect :preserve
-          :quality 1.0
-          :priority 3}]}
+                {:name :three
+                 :height 351.0
+                 :width 220
+                 :x 0.0
+                 :y 0.0
+                 :type :image
+                 :aspect :preserve
+                 :quality 1.0
+                 :priority 3}]
+         :odd [{:name :one
+                :height 351.0
+                :width 220
+                :x 0.0
+                :y 0.0
+                :type :image
+                :aspect :preserve
+                :priority 1}
+
+               {:name :two
+                :height 351.0
+                :width 220
+                :x 0.0
+                :y 0.0
+                :type :image
+                :aspect :preserve
+                :quality 0.5
+                :priority 2}
+
+               {:name :three
+                :height 351.0
+                :width 220
+                :x 0.0
+                :y 0.0
+                :type :image
+                :aspect :preserve
+                :quality 1.0
+                :priority 3}]}}

@@ -1,138 +1,235 @@
 {:name :template-1
- :holes [{:name :image-text
-          :height 150.0
-          :width 80.0
-          :x 10.0
-          :y 10.0
-          :type :image
-          :aspect :fit
-          :priority 1}
+ :holes {:even [{:name :image-text
+                 :height 150.0
+                 :width 80.0
+                 :x 10.0
+                 :y 10.0
+                 :type :image
+                 :aspect :fit
+                 :priority 1}
 
-         {:name :text-text
-          :height 150.0
-          :width 80.0
-          :x 10.0
-          :y 10.0
-          :type :text-parsed
-          :format {:paragraph {:font :regular
-                               :style #{:regular}
-                               :size 12
-                               :color [0 0 0]
-                               :indent {:all 0}
-                               :spacing {:paragraph {:below 0
-                                                     :above 0}
-                                         :line {:below 0
-                                                :above 0}}}
-                   :head-1 {:font :helvetica
-                            :style #{:bold}
-                            :size 24
-                            :color [0 0 0]
-                            :indent {:all 0}
-                            :spacing {:paragraph {:below 0
-                                                  :above 0}
-                                      :line {:below 0
-                                             :above 0}}}
-                   :head-2 {:font :helvetica
-                            :style #{:italic}
-                            :size 18
-                            :color [10 10 10]
-                            :indent {:all 0}
-                            :spacing {:paragraph {:below 0
-                                                  :above 0}
-                                      :line {:below 0
-                                             :above 0}}}
-                   :head-3 {:font :helvetica
-                            :style #{:regular}
-                            :size 16
-                            :color [20 20 20]
-                            :indent {:all 0}
-                            :spacing {:paragraph {:below 0
-                                                  :above 0}
-                                      :line {:below 0
-                                             :above 0}}}
-                   :bullet {:font :regular
-                            :style #{:regular}
-                            :size 12
-                            :color [0 0 0]
-                            :bullet-char "-"
-                            :indent {:all 0}
-                            :spacing {:paragraph {:below 0
-                                                  :above 0}
-                                      :line {:below 0
-                                             :above 0}}}
-                   :number {:font :times
-                            :style #{:regular}
-                            :size 12
-                            :color [0 0 0]
-                            :indent {:all 0}
-                            :spacing {:paragraph {:below 0
-                                                  :above 0}
-                                      :line {:below 0
-                                             :above 0}}}}
-          :priority 2}
+                {:name :text-text
+                 :height 150.0
+                 :width 80.0
+                 :x 10.0
+                 :y 10.0
+                 :type :text-parsed
+                 :format {:paragraph {:font :regular
+                                      :style #{:regular}
+                                      :size 12
+                                      :color [0 0 0]
+                                      :indent {:all 0}
+                                      :spacing {:paragraph {:below 0
+                                                            :above 0}
+                                                :line {:below 0
+                                                       :above 0}}}
+                          :head-1 {:font :helvetica
+                                   :style #{:bold}
+                                   :size 24
+                                   :color [0 0 0]
+                                   :indent {:all 0}
+                                   :spacing {:paragraph {:below 0
+                                                         :above 0}
+                                             :line {:below 0
+                                                    :above 0}}}
+                          :head-2 {:font :helvetica
+                                   :style #{:italic}
+                                   :size 18
+                                   :color [10 10 10]
+                                   :indent {:all 0}
+                                   :spacing {:paragraph {:below 0
+                                                         :above 0}
+                                             :line {:below 0
+                                                    :above 0}}}
+                          :head-3 {:font :helvetica
+                                   :style #{:regular}
+                                   :size 16
+                                   :color [20 20 20]
+                                   :indent {:all 0}
+                                   :spacing {:paragraph {:below 0
+                                                         :above 0}
+                                             :line {:below 0
+                                                    :above 0}}}
+                          :bullet {:font :regular
+                                   :style #{:regular}
+                                   :size 12
+                                   :color [0 0 0]
+                                   :bullet-char "-"
+                                   :indent {:all 0}
+                                   :spacing {:paragraph {:below 0
+                                                         :above 0}
+                                             :line {:below 0
+                                                    :above 0}}}
+                          :number {:font :times
+                                   :style #{:regular}
+                                   :size 12
+                                   :color [0 0 0]
+                                   :indent {:all 0}
+                                   :spacing {:paragraph {:below 0
+                                                         :above 0}
+                                             :line {:below 0
+                                                    :above 0}}}}
+                 :priority 2}
 
-         {:name :image-list
-          :height 150.0
-          :width 80.0
-          :x 100.0
-          :y 10.0
-          :type :image
-          :aspect :fit
-          :priority 1}
+                {:name :image-list
+                 :height 150.0
+                 :width 80.0
+                 :x 100.0
+                 :y 10.0
+                 :type :image
+                 :aspect :fit
+                 :priority 1}
 
-         {:name :text-list
-          :height 150.0
-          :width 80.0
-          :x 100.0
-          :y 10.0
-          :type :text-parsed
-          :format {:paragraph {:font :regular
-                               :style #{:regular}
-                               :size 12
-                               :color [0 0 0]
-                               :indent {:all 0}
-                               :spacing {:paragraph {:below 0
-                                                     :above 0}
-                                         :line {:below 0
-                                                :above 0}}}
-                   :head-1 {:font :helvetica
-                            :style #{:bold}
-                            :size 24
-                            :color [0 0 0]
-                            :indent {:all 0}
-                            :spacing {:paragraph {:below 0
-                                                  :above 0}
-                                      :line {:below 0
-                                             :above 0}}}
-                   :head-2 {:font :helvetica
-                            :style #{:italic}
-                            :size 18
-                            :color [10 10 10]
-                            :indent {:all 0}
-                            :spacing {:paragraph {:below 0
-                                                  :above 0}
-                                      :line {:below 0
-                                             :above 0}}}
-                   :head-3 {:font :helvetica
-                            :style #{:regular}
-                            :size 16
-                            :color [20 20 20]
-                            :indent {:all 0}
-                            :spacing {:paragraph {:below 0
-                                                  :above 0}
-                                      :line {:below 0
-                                             :above 0}}}
-                   :bullet {:font :regular
+                {:name :text-list
+                 :height 150.0
+                 :width 80.0
+                 :x 100.0
+                 :y 10.0
+                 :type :text-parsed
+                 :format {:paragraph {:font :regular
+                                      :style #{:regular}
+                                      :size 12
+                                      :color [0 0 0]
+                                      :indent {:all 0}
+                                      :spacing {:paragraph {:below 0
+                                                            :above 0}
+                                                :line {:below 0
+                                                       :above 0}}}
+                          :head-1 {:font :helvetica
+                                   :style #{:bold}
+                                   :size 24
+                                   :color [0 0 0]
+                                   :indent {:all 0}
+                                   :spacing {:paragraph {:below 0
+                                                         :above 0}
+                                             :line {:below 0
+                                                    :above 0}}}
+                          :head-2 {:font :helvetica
+                                   :style #{:italic}
+                                   :size 18
+                                   :color [10 10 10]
+                                   :indent {:all 0}
+                                   :spacing {:paragraph {:below 0
+                                                         :above 0}
+                                             :line {:below 0
+                                                    :above 0}}}
+                          :head-3 {:font :helvetica
+                                   :style #{:regular}
+                                   :size 16
+                                   :color [20 20 20]
+                                   :indent {:all 0}
+                                   :spacing {:paragraph {:below 0
+                                                         :above 0}
+                                             :line {:below 0
+                                                    :above 0}}}
+                          :bullet {:font :regular
+                                   :style #{:regular}
+                                   :size 12
+                                   :color [0 0 0]
+                                   :bullet-char "-"
+                                   :indent {:all 0}
+                                   :spacing {:paragraph {:below 0
+                                                         :above 0}
+                                             :line {:below 0
+                                                    :above 0}}}
+                          :number {:font :times
+                                   :style #{:regular}
+                                   :size 12
+                                   :color [0 0 0]
+                                   :indent {:all 0}
+                                   :spacing {:paragraph {:below 0
+                                                         :above 0}
+                                             :line {:below 0
+                                                    :above 0}}}}
+                 :priority 2}]
+:odd [{:name :image-text
+       :height 150.0
+       :width 80.0
+       :x 10.0
+       :y 10.0
+       :type :image
+       :aspect :fit
+       :priority 1}
+
+      {:name :text-text
+       :height 150.0
+       :width 80.0
+       :x 10.0
+       :y 10.0
+       :type :text-parsed
+       :format {:paragraph {:font :regular
                             :style #{:regular}
                             :size 12
                             :color [0 0 0]
-                            :bullet-char "-"
                             :indent {:all 0}
                             :spacing {:paragraph {:below 0
                                                   :above 0}
                                       :line {:below 0
                                              :above 0}}}
-                   :number {:font :times
+                :head-1 {:font :helvetica
+                         :style #{:bold}
+                         :size 24
+                         :color [0 0 0]
+                         :indent {:all 0}
+                         :spacing {:paragraph {:below 0
+                                               :above 0}
+                                   :line {:below 0
+                                          :above 0}}}
+                :head-2 {:font :helvetica
+                         :style #{:italic}
+                         :size 18
+                         :color [10 10 10]
+                         :indent {:all 0}
+                         :spacing {:paragraph {:below 0
+                                               :above 0}
+                                   :line {:below 0
+                                          :above 0}}}
+                :head-3 {:font :helvetica
+                         :style #{:regular}
+                         :size 16
+                         :color [20 20 20]
+                         :indent {:all 0}
+                         :spacing {:paragraph {:below 0
+                                               :above 0}
+                                   :line {:below 0
+                                          :above 0}}}
+                :bullet {:font :regular
+                         :style #{:regular}
+                         :size 12
+                         :color [0 0 0]
+                         :bullet-char "-"
+                         :indent {:all 0}
+                         :spacing {:paragraph {:below 0
+                                               :above 0}
+                                   :line {:below 0
+                                          :above 0}}}
+                :number {:font :times
+                         :style #{:regular}
+                         :size 12
+                         :color [0 0 0]
+                         :indent {:all 0}
+                         :spacing {:paragraph {:below 0
+                                               :above 0}
+                                   :line {:below 0
+                                          :above 0}}}}
+       :priority 2}
+
+      {:name :image-list
+       :height 150.0
+       :width 80.0
+       :x 100.0
+       :y 10.0
+       :type :image
+       :aspect :fit
+       :priority 1}
+
+      {:name :text-list
+       :height 150.0
+       :width 80.0
+       :x 100.0
+       :y 10.0
+       :type :text-parsed
+       :format {:paragraph {:font :regular
                             :style #{:regular}
                             :size 12
                             :color [0 0 0]
@@ -140,5 +237,51 @@
                             :spacing {:paragraph {:below 0
                                                   :above 0}
                                       :line {:below 0
-                                             :above 0}}}}
-          :priority 2}]}
+                                             :above 0}}}
+                :head-1 {:font :helvetica
+                         :style #{:bold}
+                         :size 24
+                         :color [0 0 0]
+                         :indent {:all 0}
+                         :spacing {:paragraph {:below 0
+                                               :above 0}
+                                   :line {:below 0
+                                          :above 0}}}
+                :head-2 {:font :helvetica
+                         :style #{:italic}
+                         :size 18
+                         :color [10 10 10]
+                         :indent {:all 0}
+                         :spacing {:paragraph {:below 0
+                                               :above 0}
+                                   :line {:below 0
+                                          :above 0}}}
+                :head-3 {:font :helvetica
+                         :style #{:regular}
+                         :size 16
+                         :color [20 20 20]
+                         :indent {:all 0}
+                         :spacing {:paragraph {:below 0
+                                               :above 0}
+                                   :line {:below 0
+                                          :above 0}}}
+                :bullet {:font :regular
+                         :style #{:regular}
+                         :size 12
+                         :color [0 0 0]
+                         :bullet-char "-"
+                         :indent {:all 0}
+                         :spacing {:paragraph {:below 0
+                                               :above 0}
+                                   :line {:below 0
+                                          :above 0}}}
+                :number {:font :times
+                         :style #{:regular}
+                         :size 12
+                         :color [0 0 0]
+                         :indent {:all 0}
+                         :spacing {:paragraph {:below 0
+                                               :above 0}
+                                   :line {:below 0
+                                          :above 0}}}}
+       :priority 2}]}}
