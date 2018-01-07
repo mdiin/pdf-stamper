@@ -296,8 +296,7 @@
                                                 (:fonts-to-embed context))
             pages (into []
                         (comp
-                          (map #(page-maker/data->pages % context-with-embedded-fonts))
-                          (cat)
+                          (cat (map #(page-maker/data->pages % context-with-embedded-fonts)))
                           (strip-pages context-with-embedded-fonts)
                           (add-filler context-with-embedded-fonts)
                           (annotate-side context-with-embedded-fonts))
