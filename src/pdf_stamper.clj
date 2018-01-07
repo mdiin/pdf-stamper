@@ -130,14 +130,14 @@
 (defn- skip-page?
   "The page should be skipped if the template specifies that it can only be printed
   on a specific page, but supplies no filler template."
-  [template next-page-number]
+  [template page-number]
   (let [{:keys [pages filler]} (:only-on template)]
     (cond
-      (and (odd? next-page-number)
+      (and (odd? page-number)
            (= pages :even))
       (not filler)
 
-      (and (even? next-page-number)
+      (and (even? page-number)
            (= pages :odd))
       (not filler)
 
@@ -146,14 +146,14 @@
 
 (defn- insert-before
   "Returns a template to use for a filler page if appropriate, nil otherwise."
-  [template next-page-number]
+  [template page-number]
   (let [{:keys [pages filler]} (:only-on template)]
     (cond
-      (and (odd? next-page-number)
+      (and (odd? page-number)
            (= pages :even))
       filler
 
-      (and (even? next-page-number)
+      (and (even? page-number)
            (= pages :odd))
       filler
 
@@ -242,41 +242,71 @@
   [document page context]
   )
 
-(defn keep-page?
-  "TODO"
-  [page]
-  true)
+(defn page-transducer
+  [f context]
+  (fn [rf]
+    (let [page-num (volatile! 1)]
+      (fn
+        ([] (rf))
+        ([result] (rf result))
+        ([result input]
+         (let [pn @page-num
+               res (f input pn context)]
+           (vswap! page-num inc)
+           (if (seq res)
+             (reduce (fn [acc in]
+                       (let [r (rf acc in)]
+                         (if (reduced? r)
+                           (reduced r)
+                           r)))
+                     result
+                     res)
+             result)))))))
 
 (defn strip-pages
-  [pages]
-  (reduce (fn [acc page]
-            (let [template (context/template (:template page))]
-              (if (skip-page? template (count acc))
-                acc
-                (conj acc page))))
-          []
-          pages))
-
-(defn add-filler
-  "TODO"
-  [page]
-  [page])
+  [context]
+  (page-transducer (fn [page page-num context]
+                     (let [template (context/template (:template page) context)]
+                       (when-not (skip-page? template page-num)
+                         [page])))
+                   context))
 
 (defn annotate-side
-  [pages]
-  (reduce (fn [acc page]
-            (let [side (if (even? (count acc))
-                         :odd
-                         :even)]
-              (conj acc (assoc page :side side))))
-          []
-          pages))
+  [context]
+  (page-transducer (fn [page page-num context]
+                     (let [side (if (even? page-num)
+                                  ::even
+                                  ::odd)]
+                       [(assoc page ::side side)]))
+                   context))
+
+(defn add-filler
+  [context]
+  (page-transducer (fn [page page-num context]
+                     (let [template (context/template (:template page) context)
+                           filler (insert-before template page-num)]
+                       (if filler
+                         [{:template filler
+                           :locations (:filler-locations page)}
+                          page]
+                         [page])))
+                   context))
 
 (comment
-  (let [pages [{} {} {}]
-        annotated-pages (annotate-side pages)]
-    (= [{:side :odd} {:side :even} {:side :odd}]
-       annotated-pages)))
+  (let [pages [{:template :a} {:template :b} {:template :c}]
+        ctx {:templates {:a {:only-on {:pages :even :filler :b}} :b {} :c {}}}
+        annp (into []
+                   (comp
+                     (strip-pages ctx)
+                     (add-filler ctx)
+                     (annotate-side ctx))
+                   pages)
+        annotated-pages (transduce (annotate-side ctx) (fn ([acc] acc) ([acc p] (conj acc p))) [] pages)]
+    annp))
+
+;; NOTES TO SELF:
+;; Need to run strip-pages -> add-fillers -> reorder-pages -> remove-unnecessary-fillers -> reorder-pages
+;; to support e.g. placing a page always on the center page
 
 (defn fill-pages
   "When the context is populated with fonts and templates, this is the
@@ -304,12 +334,14 @@
                                                   (context/embed-font document font style context))
                                                 context
                                                 (:fonts-to-embed context))
-            pages (->> data
-                       (mapcat #(page-maker/data->pages % context-with-embedded-fonts))
-                       (strip-pages)
-                       (map add-filler)
-                       (flatten)
-                       (annotate-side))
+            pages (into []
+                        (comp
+                          (map #(page-maker/data->pages % context-with-embedded-fonts))
+                          (cat)
+                          (strip-pages context-with-embedded-fonts)
+                          (add-filler context-with-embedded-fonts)
+                          (annotate-side context-with-embedded-fonts))
+                        data)
             open-documents (doall (map #(fill-page-2 document % context-with-embedded-fonts) pages))]
         (.save document output)
         (doseq [doc (flatten open-documents)]
