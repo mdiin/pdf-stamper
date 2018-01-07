@@ -13,7 +13,7 @@
       (-> []
           (conj (token/->ParagraphBegin new-style))
           (into (flatten (tokenize content new-style)))
-          (conj (token/->ParagraphEnd new-style)))))
+          (conj (token/->ParagraphEnd new-style))))))
 
 (def t-paragraph (t-paragraph-elm :paragraph))
 (def t-head-1 (t-paragraph-elm :head-1))
