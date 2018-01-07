@@ -1,3 +1,13 @@
+# --- January 7 2018, 21:57 (BRANCH: split-wrapping-and-stamping) ---
+
+NOTE: Page-maker namespace should really not care about which side a hole is on.
+
+Implemented the fill-page function.
+
+## Next time I open this code base:
+
+Run manual tests and fix any problems.
+
 # --- January 4 2018, 22:12 (BRANCH: split-wrapping-and-stamping) ---
 
 Implemented the remaining flow functions. I noticed a lot of similarity in their
