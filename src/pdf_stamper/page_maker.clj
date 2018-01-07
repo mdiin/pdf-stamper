@@ -5,7 +5,8 @@
     [pdf-stamper.context :as context]
     [pdf-stamper.protocols :as p :refer [SelectToken]]
     [pdf-stamper.tokenizer :refer [tokenize]]
-    [pdf-stamper.tokenizer.tokens :as t]))
+    [pdf-stamper.tokenizer.tokens :as t]
+    [pdf-stamper.tokenizer.xml :as xml-tokenizable]))
 
 ;; The general algorithm for building pages:
 ;;
@@ -284,7 +285,7 @@
 
           ;; 3. - 5.
           processed-holes (map #(process-hole template % page-side context)
-                               (mapcat seq (:locations d)))
+                               (:locations d))
 
           current-page {:template template
                         :locations (map second processed-holes)}
