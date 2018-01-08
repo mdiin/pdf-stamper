@@ -236,15 +236,12 @@
 (defmethod process-hole :image
   [template [hole {:as data :keys [contents]}] side context]
   [(hash-map hole data)
-   (hash-map hole {:contents (:image contents)})])
+   (hash-map hole {:contents contents})])
 
 (defmethod process-hole :text
   [template [hole {:as data :keys [contents]}] side context]
-  (let [text-contents (if (:tokenized? (meta (:text contents)))
-                        (:text contents)
-                        (tokenize (xml/parse-str (:text contents))))]
-    [(hash-map hole (assoc-in data [:contents :text] (vary-meta text-contents assoc :tokenized? true)))
-     (hash-map hole {:contents text-contents})]))
+  [(hash-map hole data)
+   (hash-map hole data)])
 
 (defmethod process-hole :parsed-text
   [template [hole {:as data :keys [contents]}] side context]
