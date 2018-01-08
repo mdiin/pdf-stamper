@@ -296,11 +296,10 @@
                                                 (:fonts-to-embed context))
             pages (into []
                         (comp
-                          (cat (map #(page-maker/data->pages % context-with-embedded-fonts)))
                           (strip-pages context-with-embedded-fonts)
                           (add-filler context-with-embedded-fonts)
                           (annotate-side context-with-embedded-fonts))
-                        data)
+                        (mapcat #(page-maker/data->pages % context-with-embedded-fonts) data))
             open-documents (doall (map #(fill-page document % context-with-embedded-fonts) pages))]
         (.save document output)
         (doseq [doc (flatten open-documents)]

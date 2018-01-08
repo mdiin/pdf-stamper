@@ -19,18 +19,18 @@
 ;; ## Templates
 
 (def base-templates
-  "There are no standard templates in pdf-stamper."
-  {})
+"There are no standard templates in pdf-stamper."
+{})
 
 (defn add-template
   "Adding templates to the context is achieved using this function.
   When adding a template two things are needed: The template description,
   i.e. what goes where, and a locator for the PDF page to use with the
   template description. The template locator can be either a URL or a string.
-  
+
   [template-def template-uri context]
   Use the same template locator for both even and odd pages.
-  
+
   [template-def odd-template-uri even-template-uri context]
   Use a different template locator for even and odd pages."
   ([template-def template-uri context]
@@ -79,6 +79,11 @@
 (defn template-holes-odd
   [template context]
   (template-holes template :odd context))
+
+(defn template-holes-any
+  [template context]
+  (concat (template-holes-even template context)
+          (template-holes-odd template context)))
 
 (defn get-template-overflow
   "Templates can specify an overflow template, a template that will be used
@@ -152,7 +157,7 @@
   unmodified. In practice this situation is highly unlikely, and the check is
   primarily in place to prevent unanticipated crashes (in case code external to
   pdf-stamper modified the context).
-  
+
   The font descriptor is coerced to an input stream and loaded into the document,
   after which it is automatically closed."
   [doc font style context]
@@ -164,7 +169,7 @@
 (defn get-font
   "When a font has been added to the context and embedded in a document, it can
   be queried by providing the font name and style.
- 
+
   It is guaranteed that a font is always found. Thus, if no font with the given
   name is registered the default font (Times New Roman) is used with the supplied
   style. If again no font is found, the default font and style are used (Times New

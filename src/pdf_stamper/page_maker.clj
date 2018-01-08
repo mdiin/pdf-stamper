@@ -261,10 +261,11 @@
      (hash-map hole {:contents selected})]))
 
 (defn- contains-parsed-text-holes?
-  [data template]
-  (some #{:parsed-text}
-        (map #(get-in template [% :type])
-             (keys (:locations data)))))
+  [data template-holes]
+  (let [hole-types (into {} (map (juxt :name :type) template-holes))]
+    (some #{:parsed-text}
+          (map #(get-in hole-types [% :type])
+               (keys (:locations data))))))
 
 (defn data->pages
   "Convert a single map describing a number of pages to a vector of maps
@@ -280,20 +281,23 @@
   [data context]
   (loop [pages []
          d data]
-    (let [template (:template d) ;; 2.
+    (let [template-name (:template d) ;; 2.
           page-side (if (even? (count pages)) :odd :even)
 
           ;; 3. - 5.
-          processed-holes (map #(process-hole template % page-side context)
+          processed-holes (map #(process-hole template-name % page-side context)
                                (:locations d))
 
-          current-page {:template template
+          current-page {:template template-name
                         :locations (map second processed-holes)}
 
-          overflow-template (context/get-template-overflow template context) ;; 6.
+          overflow-template (context/get-template-overflow template-name context) ;; 6.
           overflow {:template overflow-template
                     :locations (map first processed-holes)}]
-      (if (and (contains-parsed-text-holes? overflow template) overflow-template)
+      (if (and (contains-parsed-text-holes?
+                 (:locations overflow)
+                 (context/template-holes-any template-name context))
+               overflow-template)
         (recur ;; 7.
           (conj pages current-page)
           overflow)
