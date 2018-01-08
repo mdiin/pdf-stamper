@@ -286,11 +286,11 @@
                                (:locations d))
 
           current-page {:template template-name
-                        :locations (map second processed-holes)}
+                        :locations (apply merge (map second processed-holes))}
 
           overflow-template (context/get-template-overflow template-name context) ;; 6.
           overflow {:template overflow-template
-                    :locations (map first processed-holes)}]
+                    :locations (apply merge (map first processed-holes))}]
       (if (and (contains-parsed-text-holes?
                  (:locations overflow)
                  (context/template-holes-any template-name context))
