@@ -1,3 +1,12 @@
+# --- January 8 2018, 13:45 (BRANCH: split-wrapping-and-stamping) ---
+
+Fixed the printing of images and (non-parsed) text holes.
+
+## Next time I open this code base:
+
+Fix stamping of parsed-text holes; continue running manual tests from bullets.clj
+and on.
+
 # --- January 7 2018, 21:57 (BRANCH: split-wrapping-and-stamping) ---
 
 NOTE: Page-maker namespace should really not care about which side a hole is on.
