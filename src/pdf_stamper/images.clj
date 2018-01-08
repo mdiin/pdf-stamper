@@ -18,7 +18,7 @@
   The arguments are passed as a map to provide some context to
   the four numbers, as it is otherwise too easy to mix up the
   parameters when applying this function.
-  
+
   *Future*: Going by the description above it should be possible
   to refactor this to compute both scaling factors up front, and
   simply use the largest."
@@ -68,7 +68,7 @@
   It is possible to specify the quality of the stamped image by
   setting the `:quality` key to a value between `0.0` and `1.0`. The
   default quality if not specified is `0.75`.
-  
+
   *Note*: Using `PDJpeg` does not cancel out support for PNGs. It
   seems that the PNGs are internally converted to JPEGs (**TO BE
   CONFIRMED**)."
