@@ -12,3 +12,6 @@
   (select-token [token remaining-space formats context])
   (horizontal-increase? [token]))
 
+(defprotocol Stamping
+  (stamp! [this stream]))
+
