@@ -1,3 +1,16 @@
+# --- January 9 2018, 22:00 (BRANCH: split-wrapping-and-stamping) ---
+
+Removed page side from the calculations in page-maker, as that is unknowable before
+all pages have been wrapped.
+
+Began implementation of the Stamping protocol for tokens by implementing it for
+the Word token. Noticed that I probably want a Space token as well.
+
+## Next time I open this code base:
+
+1. Continue implementing the Stamping protocol.
+2. When finished, implement a Space token.
+
 # --- January 8 2018, 13:45 (BRANCH: split-wrapping-and-stamping) ---
 
 Fixed the printing of images and (non-parsed) text holes.
