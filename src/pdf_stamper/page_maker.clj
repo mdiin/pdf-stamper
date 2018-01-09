@@ -215,37 +215,37 @@
 
 (defn- hole-descriptor
   "Get the hole-descriptor of hole in template."
-  [template hole side context]
+  [template hole context]
   (first
     (filter (comp (partial = hole) :name)
-            (context/template-holes template side context))))
+            (context/template-holes-any template context))))
 
 (defmulti process-hole
   "How to process a hole depends on its type, but the result will always be a
   pair of [overflow, current-page]. On most holes, overflow will be the same as
   the data that comes in; the option to make it different is present for cases
   such as parsed-text holes, where a longer text can span multiple pages."
-  (fn [template [hole _] side context]
-    (:type (hole-descriptor template hole side context))))
+  (fn [template [hole _] context]
+    (:type (hole-descriptor template hole context))))
 
 (defmethod process-hole :default
-  [template [hole data] side context]
+  [template [hole data] context]
   [(hash-map hole data)
    (hash-map hole {:contents nil})])
 
 (defmethod process-hole :image
-  [template [hole {:as data :keys [contents]}] side context]
+  [template [hole {:as data :keys [contents]}] context]
   [(hash-map hole data)
    (hash-map hole {:contents contents})])
 
 (defmethod process-hole :text
-  [template [hole {:as data :keys [contents]}] side context]
+  [template [hole {:as data :keys [contents]}] context]
   [(hash-map hole data)
    (hash-map hole data)])
 
 (defmethod process-hole :parsed-text
-  [template [hole {:as data :keys [contents]}] side context]
-  (let [{:keys [height width format]} (hole-descriptor template hole side context)
+  [template [hole {:as data :keys [contents]}] context]
+  (let [{:keys [height width format]} (hole-descriptor template hole context)
         tokens (if (:tokenized? (meta (:text contents)))
                  (:text contents)
                  (tokenize (xml/parse-str (:text contents))))
@@ -279,11 +279,9 @@
   (loop [pages []
          d data]
     (let [template-name (:template d) ;; 2.
-          page-side (if (even? (count pages)) :odd :even)
 
           ;; 3. - 5.
-          processed-holes (map #(process-hole template-name % page-side context)
-                               (:locations d))
+          processed-holes (map #(process-hole template-name % context) (:locations d))
 
           current-page {:template template-name
                         :locations (apply merge (map second processed-holes))}
