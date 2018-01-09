@@ -198,3 +198,14 @@
         (set-color color)
         (draw-string (:contents line)))))
 
+;; Protocol implementation
+(extend-protocol p/Stamping
+  pdf_stamper.tokenizer.tokens.Word
+  (stamp! [word stream formatting context]
+    (let [{:keys [character-style format]} word
+          {:keys [font size style color]} (get formatting format)]
+      (-> stream
+          (set-font font size (into style character-style) context)
+          (set-color color)
+          (draw-string (:word word))))))
+

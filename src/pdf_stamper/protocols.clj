@@ -13,5 +13,5 @@
   (horizontal-increase? [token]))
 
 (defprotocol Stamping
-  (stamp! [this stream]))
+  (stamp! [this stream formatting context]))
 
