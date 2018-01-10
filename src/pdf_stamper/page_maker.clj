@@ -243,7 +243,7 @@
   [(hash-map hole data)
    (hash-map hole data)])
 
-(defmethod process-hole :parsed-text
+(defmethod process-hole :text-parsed
   [template [hole {:as data :keys [contents]}] context]
   (let [{:keys [height width format]} (hole-descriptor template hole context)
         tokens (if (:tokenized? (meta (:text contents)))
@@ -289,10 +289,10 @@
           overflow-template (context/get-template-overflow template-name context) ;; 6.
           overflow {:template overflow-template
                     :locations (apply merge (map first processed-holes))}]
-      (if (and (contains-parsed-text-holes?
+      (if (and overflow-template
+               (contains-parsed-text-holes?
                  (:locations overflow)
-                 (context/template-holes-any template-name context))
-               overflow-template)
+                 (context/template-holes-any template-name context)))
         (recur ;; 7.
           (conj pages current-page)
           overflow)
