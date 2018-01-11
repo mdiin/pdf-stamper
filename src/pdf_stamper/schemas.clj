@@ -83,7 +83,9 @@
 (def FullTemplate
   {:name s/Keyword
    (s/optional-key :overflow) s/Keyword
-   (s/optional-key :only-on) {:pages (s/enum :even :odd)
+   (s/optional-key :only-on) {:pages (s/conditional
+                                       #(keyword? %) (s/enum :even :odd)
+                                       :else (s/pred fn? 'is-function))
                               (s/optional-key :filler) s/Keyword} ;; TODO: Somehow check that the filler doesn't specify that it can only be printed on the same pages as this template
    (s/optional-key :transform-pages) (s/constrained {(s/optional-key :even) Transforms
                                                      (s/optional-key :odd) Transforms}

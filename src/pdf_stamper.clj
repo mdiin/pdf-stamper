@@ -17,7 +17,8 @@
     [pdf-stamper.images :as images]
     [potemkin])
   (:import
-    [org.apache.pdfbox.pdmodel PDDocument]
+    [org.apache.pdfbox.cos COSDictionary COSName]
+    [org.apache.pdfbox.pdmodel PDDocument PDPage]
     [org.apache.pdfbox.pdmodel.edit PDPageContentStream]))
 
 ;; ## Templates
@@ -142,6 +143,10 @@
            (= pages :odd))
       (not filler)
 
+      (and (fn? pages)
+           (not (pages next-page-number)))
+      (not filler)
+
       :default
       false)))
 
@@ -152,11 +157,21 @@
     (cond
       (and (odd? next-page-number)
            (= pages :even))
-      filler
+      [filler]
 
       (and (even? next-page-number)
            (= pages :odd))
-      filler
+      [filler]
+
+      (and (fn? pages)
+           (not (pages next-page-number)))
+      (repeat (count
+                (sequence
+                  (comp
+                    (map pages)
+                    (take-while not))
+                  (iterate inc next-page-number)))
+              filler)
 
       :default
       nil)))
@@ -209,11 +224,11 @@
   (let [template (context/template (:template page-data) context)]
     (if (skip-page? template (inc (.getNumberOfPages document)))
       []
-      (let [fill-page-vec (when-let [filler (insert-before template (inc (.getNumberOfPages document)))]
-                            (assert filler)
-                            (let [filler-data {:template filler
-                                               :locations (:filler-locations page-data)}]
-                              (fill-page document filler-data context)))
+      (let [fill-page-vec (when-let [fillers (seq (insert-before template (inc (.getNumberOfPages document))))]
+                            (doseq [filler fillers]
+                              (let [filler-data {:template filler
+                                                 :locations (:filler-locations page-data)}]
+                                (fill-page document filler-data context))))
             template-overflow (:overflow template)
             template-transforms (:transform-pages template)
             template-holes (if (odd? (inc (.getNumberOfPages document)))
@@ -255,10 +270,18 @@
   holes. This is really an implementation detail of the individual functions
   for filling the holes.
 
+  A map of options can be passed to this function:
+
+  - `number-of-pages`:
+    - If `number?` forces document to be at least of that specific size by prepending enough
+      blank pages to the last page.
+    - If `fn?` expects `number-of-pages` to be a fn accepting the current page count
+      and returning the number of blank pages to prepend to the last page.
+
   The completed document is written to the resulting
   `java.io.ByteArrayOutputStream`, ready to be sent over the network or
   written to a file using a `java.io.FileOutputStream`."
-  [pages context]
+  [pages context & options]
   (let [output (java.io.ByteArrayOutputStream.)]
     (with-open [document (PDDocument.)]
       (let [context-with-embedded-fonts (reduce (fn [context [font style]]
