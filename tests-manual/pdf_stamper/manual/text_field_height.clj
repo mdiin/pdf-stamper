@@ -12,9 +12,9 @@
 
 (def background (javax.imageio.ImageIO/read (clojure.java.io/as-file "test/templates/text_field_height/background.png")))
 (def text-text
-  "<pp><p>This is a text that was written to test something about texts staying put within the given boundaries and was definitely not written to be read out load as it is missing all kinds of stops and pauses but it should look nice and a lot better than a random lorem ipsum.</p></pp>")
+  "<p><p>This is a text that was written to test something about texts staying put within the given boundaries and was definitely not written to be read out load as it is missing all kinds of stops and pauses but it should look nice and a lot better than a random lorem ipsum.</p></p>")
 (def text-list
-  "<pp><ul><li>boundaries and was definitely not written</li><li>ing about texts staying put</li><li>better than a random lorem</li><li>is a text that was</li><li>Five</li><li>Six</li></ul></pp>")
+  "<p><ul><li>boundaries and was definitely not written</li><li>ing about texts staying put</li><li>better than a random lorem</li><li>is a text that was</li><li>Five</li><li>Six</li></ul></p>")
 
 (def context (->> base-context
                   (add-template template-1 template-pdf-1)))

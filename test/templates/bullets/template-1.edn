@@ -7,7 +7,7 @@
                  :type :text-parsed
                  :format {:paragraph {:font :regular
                                       :style #{:regular}
-                                      :size 12
+                                      :size 8
                                       :color [0 0 0]
                                       :indent {:all 0}
                                       :spacing {:paragraph {:below 0
@@ -43,7 +43,7 @@
                                                     :above 0}}}
                           :bullet {:font :regular
                                    :style #{:regular}
-                                   :size 12
+                                   :size 8
                                    :color [0 0 0]
                                    :indent {:all 0}
                                    :spacing {:paragraph {:below 0
@@ -52,7 +52,7 @@
                                                     :above 0}}}
                           :number {:font :times
                                    :style #{:regular}
-                                   :size 12
+                                   :size 8
                                    :color [0 0 0]
                                    :indent {:all 0}
                                    :spacing {:paragraph {:below 0
@@ -69,7 +69,7 @@
                  :type :text-parsed
                  :format {:paragraph {:font :regular
                                       :style #{:regular}
-                                      :size 12
+                                      :size 8
                                       :color [0 0 0]
                                       :indent {:all 0}
                                       :spacing {:paragraph {:below 0
@@ -105,7 +105,7 @@
                                                     :above 0}}}
                           :bullet {:font :regular
                                    :style #{:regular}
-                                   :size 12
+                                   :size 8
                                    :color [0 0 0]
                                    :indent {:all 0}
                                    :bullet-char "->"
@@ -115,7 +115,7 @@
                                                     :above 0}}}
                           :number {:font :times
                                    :style #{:regular}
-                                   :size 12
+                                   :size 8
                                    :color [0 0 0]
                                    :indent {:all 0}
                                    :spacing {:paragraph {:below 0
@@ -132,7 +132,7 @@
        :type :text-parsed
        :format {:paragraph {:font :regular
                             :style #{:regular}
-                            :size 12
+                            :size 8
                             :color [0 0 0]
                             :indent {:all 0}
                             :spacing {:paragraph {:below 0
@@ -168,7 +168,7 @@
                                           :above 0}}}
                 :bullet {:font :regular
                          :style #{:regular}
-                         :size 12
+                         :size 8
                          :color [0 0 0]
                          :indent {:all 0}
                          :spacing {:paragraph {:below 0
@@ -177,7 +177,7 @@
                                           :above 0}}}
                 :number {:font :times
                          :style #{:regular}
-                         :size 12
+                         :size 8
                          :color [0 0 0]
                          :indent {:all 0}
                          :spacing {:paragraph {:below 0
@@ -194,7 +194,7 @@
        :type :text-parsed
        :format {:paragraph {:font :regular
                             :style #{:regular}
-                            :size 12
+                            :size 8
                             :color [0 0 0]
                             :indent {:all 0}
                             :spacing {:paragraph {:below 0
@@ -230,7 +230,7 @@
                                           :above 0}}}
                 :bullet {:font :regular
                          :style #{:regular}
-                         :size 12
+                         :size 8
                          :color [0 0 0]
                          :indent {:all 0}
                          :bullet-char "->"
@@ -240,7 +240,7 @@
                                           :above 0}}}
                 :number {:font :times
                          :style #{:regular}
-                         :size 12
+                         :size 8
                          :color [0 0 0]
                          :indent {:all 0}
                          :spacing {:paragraph {:below 0

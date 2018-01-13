@@ -8,7 +8,7 @@
 (def template-pdf-1 "test/templates/bullets/template-1.pdf")
 
 (def text-list
-  "<p><ul><li>boundaries and was definitely not written</li><li>ing about texts staying put</li><li>better than a random lorem</li><li>is a text that was</li><li>Five</li><li>Six</li></ul></p>")
+  "<p><ol><li>boundaries and was definitely not written</li><li>ing about texts staying put</li><li>better than a random lorem</li><li>is a text that was</li><li>Five</li><li>Six</li></ol></p>")
 
 (def context (->> base-context
                   (add-template template-1 template-pdf-1)))

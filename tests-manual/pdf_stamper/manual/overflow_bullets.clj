@@ -13,7 +13,7 @@
 
 (def background (javax.imageio.ImageIO/read (clojure.java.io/as-file "test/templates/overflow_bullets/background.png")))
 (def text
-  "<pp><p>Introductory paragraph of text spanning multiple lines.</p><ul><li>This is a bullet that is much longer than any bullets you would normally see and addtionally it is without stops or breaks making it even harder to read than it should be although bullets should never be very long in any case. It is even longer than you had imagined, and now it suddenly contains a comma!</li></ul><p>This is just to test that paragraph afterwards look correct.</p></pp>")
+  "<p><p>Introductory paragraph of text spanning multiple lines.</p><ul><li>This is a bullet that is much longer than any bullets you would normally see and addtionally it is without stops or breaks making it even harder to read than it should be although bullets should never be very long in any case. It is even longer than you had imagined, and now it suddenly contains a comma!</li></ul><p>This is just to test that paragraph afterwards look correct.</p></p>")
 
 (def context (->> base-context
                   (add-template template-1 template-pdf-1)))
