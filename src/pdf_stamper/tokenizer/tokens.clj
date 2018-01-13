@@ -1,6 +1,6 @@
 (ns pdf-stamper.tokenizer.tokens
   (:require
-    [pdf-stamper.protocols :as p :refer [Token]]
+    [pdf-stamper.tokenizer.protocols :as p :refer [Dimensions]]
     [pdf-stamper.context :as context]))
 
 ;; ## Tokens
@@ -30,7 +30,7 @@
        (get-in formatting [:spacing :paragraph :below]))))
 
 (defrecord Word [style word]
-  Token
+  Dimensions
   (height [this formats context]
     ;(println "Tokens::Word::height")
     (single-line-height this formats context))
@@ -49,7 +49,7 @@
         res))))
 
 (defrecord NewLine [style]
-  Token
+  Dimensions
   (height [this formats context]
     ;(println "Tokens::NewLine::height")
     (single-line-height this formats context))
@@ -58,7 +58,7 @@
     0.0))
 
 (defrecord ParagraphBegin [style]
-  Token
+  Dimensions
   (height [this formats context]
     ;(println "Tokens::ParapgraphBegin::height")
     (let [formatting (get formats (:format style))]
@@ -70,7 +70,7 @@
     0.0))
 
 (defrecord ParagraphEnd [style]
-  Token
+  Dimensions
   (height [this formats context]
     ;(println "Tokens::ParapgraphEnd::height")
     (let [formatting (get formats (:format style))]
@@ -81,7 +81,7 @@
     0.0))
 
 (defrecord NewParagraph [style]
-  Token
+  Dimensions
   (height [this formats context]
     (paragraph-line-height this formats context))
 
@@ -89,7 +89,7 @@
     0.0))
 
 (defrecord NewPage [style]
-  Token
+  Dimensions
   (height [this formats context]
     ;(println "Tokens::NewPage::height")
     ;; A NewPage token always fills any remaining space on the page.
@@ -99,7 +99,7 @@
     0.0))
 
 (defrecord ListBullet [style]
-  Token
+  Dimensions
   (height [this formats context]
     (single-line-height this formats context))
 
@@ -117,7 +117,7 @@
       (+ bullet-width text-spacing))))
 
 (defrecord ListNumber [style number]
-  Token
+  Dimensions
   (height [this formats context]
     (single-line-height this formats context))
 

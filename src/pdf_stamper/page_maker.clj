@@ -3,8 +3,8 @@
     [clojure.data.xml :as xml]
 
     [pdf-stamper.context :as context]
-    [pdf-stamper.protocols :as p :refer [SelectToken]]
     [pdf-stamper.tokenizer :refer [tokenize]]
+    [pdf-stamper.tokenizer.protocols :as p :refer [Selectable]]
     [pdf-stamper.tokenizer.tokens :as t]
     [pdf-stamper.tokenizer.xml :as xml-tokenizable]))
 
@@ -51,9 +51,9 @@
 ;;
 
 ;; 4a. Take the number of tokens for which there is room in the hole
-(extend-protocol p/SelectToken
+(extend-protocol p/Selectable
   pdf_stamper.tokenizer.tokens.Word
-  (select-token [token {:as remaining-space :keys [width height]} formats context]
+  (select [token {:as remaining-space :keys [width height]} formats context]
     (let [res (cond
             ;; Room for one more on the line
             (and
@@ -74,7 +74,7 @@
   (horizontal-increase? [_] false)
 
   pdf_stamper.tokenizer.tokens.ListBullet
-  (select-token [token {:as remaining-space :keys [width height]} formats context]
+  (select [token {:as remaining-space :keys [width height]} formats context]
     (cond
       ;; No more room on line, issue warning
       (<= (p/width token formats context) width)
@@ -89,7 +89,7 @@
   (horizontal-increase? [_] false)
 
   pdf_stamper.tokenizer.tokens.ListNumber
-  (select-token [token {:as remaining-space :keys [width height]} formats context]
+  (select [token {:as remaining-space :keys [width height]} formats context]
     (cond
       ;; No more room on line, issue warning
       (<= (p/width token formats context) width)
@@ -103,7 +103,7 @@
   (horizontal-increase? [_] false)
 
   pdf_stamper.tokenizer.tokens.NewLine
-  (select-token [token {:as remaining-space :keys [width height]} formats context]
+  (select [token {:as remaining-space :keys [width height]} formats context]
     (cond
       ;; Room for one more line
       (<= (p/height token formats context) height)
@@ -115,7 +115,7 @@
   (horizontal-increase? [_] true)
 
   pdf_stamper.tokenizer.tokens.ParagraphBegin
-  (select-token [token {:as remaining-space :keys [width height]} formats context]
+  (select [token {:as remaining-space :keys [width height]} formats context]
     (cond
       (<= (p/height token formats context) height)
       [token]
@@ -126,7 +126,7 @@
   (horizontal-increase? [_] true)
 
   pdf_stamper.tokenizer.tokens.ParagraphEnd
-  (select-token [token {:as remaining-space :keys [width height]} formats context]
+  (select [token {:as remaining-space :keys [width height]} formats context]
     (cond
       (<= (p/height token formats context) height)
       [token]
@@ -137,7 +137,7 @@
   (horizontal-increase? [_] true)
 
   pdf_stamper.tokenizer.tokens.NewParagraph
-  (select-token [token {:as remaining-space :keys [width height]} formats context]
+  (select [token {:as remaining-space :keys [width height]} formats context]
     (cond
       ;; Room for a new paragraph
       (<= (p/height token formats context) height)
@@ -149,14 +149,14 @@
   (horizontal-increase? [_] true)
 
   pdf_stamper.tokenizer.tokens.NewPage
-  (select-token [token {:as remaining-space :keys [width height]} formats context]
+  (select [token {:as remaining-space :keys [width height]} formats context]
     ;; Always room for a page break...
     [token])
 
   (horizontal-increase? [_] true)
 
   nil
-  (select-token [_ _ _ _] nil)
+  (select [_ _ _ _] nil)
   (horizontal-increase? [_] false))
 
 (defn- maybe-inc-height
@@ -174,7 +174,7 @@
   (reduce
     #(and %1 %2)
     true
-    (map #(satisfies? p/SelectToken %) tokens)))
+    (map #(satisfies? p/Selectable %) tokens)))
 
 (defn split-tokens
   [tokens {:as hole-dimensions :keys [hheight hwidth]} formats context]
@@ -190,7 +190,7 @@
     (loop [{:as acc :keys [selected remaining selected-height selected-width]} init-state]
       (let [remaining-space {:width (- hwidth selected-width)
                              :height (- hheight selected-height)}]
-        (if-let [tokens (p/select-token (first remaining) remaining-space formats context)]
+        (if-let [tokens (p/select (first remaining) remaining-space formats context)]
           (recur (-> acc
                      (update-in [:selected] into tokens)
                      (update-in [:remaining] (partial drop 1))

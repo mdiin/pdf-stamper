@@ -6,7 +6,7 @@
   (:require
     [pdf-stamper.context :as context]
     [pdf-stamper.tokenizer.tokens]
-    [pdf-stamper.protocols :as p]))
+    [pdf-stamper.tokenizer.protocols :as p]))
 
 (defn- move-text-position-up
   [c-stream amount]
@@ -201,7 +201,7 @@
         (draw-string (:contents line)))))
 
 ;; Protocol implementation
-(extend-protocol p/Stamping
+(extend-protocol p/Stampable
   pdf_stamper.tokenizer.tokens.Word
   (stamp! [word stream paragraph-formatting context]
     (let [{:keys [character-style format]} (:style word)
