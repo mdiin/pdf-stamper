@@ -60,7 +60,7 @@
     (-> c-stream
         (pdf/begin-text-block)
         (pdf/set-text-position (:x data) (+ (:y data) (:height formatting)))
-        (pdf/write-paragraphs formatting data context)
+        (pdf/write-text formatting (:contents data) context)
         (pdf/end-text-block))))
 
 (defn fill-text

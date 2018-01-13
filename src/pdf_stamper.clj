@@ -70,12 +70,9 @@
 
   *Note*: Holes where the page does not contain data will be skipped."
   [document c-stream holes page-data context]
-  (doall
-    (into {}
-          (map (fn [hole]
-                 (when-let [location-data (get-in page-data [:locations (:name hole)])]
-                   (fill-hole document c-stream hole location-data context)))
-               (sort-by :priority holes)))))
+  (doseq [hole (sort-by :priority holes)]
+    (when-let [location-data (get-in page-data [:locations (:name hole)])]
+      (fill-hole document c-stream hole location-data context))))
 
 ;; The types supported out of the box are:
 ;;
@@ -95,9 +92,7 @@
 
 (defmethod fill-hole :text-parsed
   [document c-stream hole location-data context]
-  (let [data (update-in (merge hole location-data)
-                        [:contents :text]
-                        #(if (string? %) % %))]
+  (let [data (merge hole location-data)]
     (text/fill-text-parsed document
                            c-stream
                            data

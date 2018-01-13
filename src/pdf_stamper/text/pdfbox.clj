@@ -172,6 +172,12 @@
     (write-paragraph c-stream p-format paragraph context))
   c-stream)
 
+(defn write-text
+  [c-stream formatting tokens context]
+  (doseq [token tokens]
+    (p/stamp! token c-stream (get formatting (get-in token [:style :format])) context))
+  c-stream)
+
 (defn- optimal-font-size
   [font style start-size string max-width context]
   (let [string-width (context/get-font-string-width font style start-size string context)]
@@ -203,60 +209,62 @@
 ;; Protocol implementation
 (extend-protocol p/Stampable
   pdf_stamper.tokenizer.tokens.Word
-  (stamp! [word stream paragraph-formatting context]
-    (let [{:keys [character-style format]} (:style word)
-          {:keys [font size style color]} (get paragraph-formatting format)]
+  (stamp! [word stream formatting context]
+    (let [{:keys [character-style]} (:style word)
+          {:keys [font size style color]} formatting]
       (-> stream
           (set-font font size (into style character-style) context)
-          (set-color color)
-          (draw-string (:word word)))))
+          (draw-string (:word word))
+          (set-color color))))
 
   pdf_stamper.tokenizer.tokens.NewLine
-  (stamp! [newline stream paragraph-formatting context]
-    (let [{:keys [format]} (:style newline)
-          {:keys [font size style]} (get paragraph-formatting format)]
-      (new-line-by-font stream font size style context)))
+  (stamp! [newline stream formatting context]
+    (let [{:keys [font size style]} formatting
+          spacing (get-in formatting [:spacing :line])]
+      (-> stream
+          (move-text-position-down (:above spacing))
+          (new-line-by-font font size style context)
+          (move-text-position-down (:below spacing)))))
 
   pdf_stamper.tokenizer.tokens.ParagraphBegin
-  (stamp! [paragraph-begin stream paragraph-formatting context]
-    (let [{:keys [format]} (:style paragraph-begin)
-          {:keys [font size style spacing]} (get paragraph-formatting format)]
+  (stamp! [paragraph-begin stream formatting context]
+    (let [{:keys [font size style spacing]} formatting
+          spacing (get-in formatting [:spacing :paragraph])]
       (-> stream
           (new-line-by-font font size style context)
-          (move-text-position-down (get-in spacing [:line :above])))))
+          (move-text-position-down (:above spacing)))))
 
   pdf_stamper.tokenizer.tokens.ParagraphEnd
-  (stamp! [paragraph-end stream paragraph-formatting context]
-    (let [{:keys [format]} (:style paragraph-end)
-          {:keys [spacing]} (get paragraph-formatting format)]
-      (move-text-position-down stream (get-in spacing [:line :below]))))
+  (stamp! [paragraph-end stream formatting context]
+    (let [spacing (get-in formatting [:spacing :paragraph])]
+      (move-text-position-down stream (:below spacing))))
 
   pdf_stamper.tokenizer.tokens.NewPage
   (stamp! [_ stream _ _] stream)
 
   pdf_stamper.tokenizer.tokens.ListBullet
-  (stamp! [list-bullet stream paragraph-formatting context]
-    (let [{:keys [format]} (:style list-bullet)
-          {:keys [font style size color bullet-char]} (get paragraph-formatting format)
+  (stamp! [list-bullet stream formatting context]
+    (let [{:keys [font style size color bullet-char]} formatting
           bullet (str (or bullet-char (char 149)))
           indent (* 2 (context/get-font-string-width font style size bullet context))
           indent-level (get-in (:style list-bullet) [:list :indent :level] 0)]
       (-> stream
-          (move-text-position-right (* indent indent-level))
+          #_(move-text-position-right (* indent indent-level))
           (set-font font size (:style list-bullet) context)
           (set-color color)
-          (draw-string bullet))))
+          (draw-string bullet)
+          (move-text-position-right (* indent indent-level)))))
 
   pdf_stamper.tokenizer.tokens.ListNumber
-  (stamp! [list-number stream paragraph-formatting context]
-    (let [{:keys [format]} (:style list-number)
-          {:keys [font style size color]} (get paragraph-formatting format)
-          number (:number list-number)
+  (stamp! [list-number stream formatting context]
+    (let [{:keys [font style size color]} formatting
+          number (str (:number list-number))
           indent (* 2 (context/get-font-string-width font style size number context))
           indent-level (get-in (:style list-number) [:list :indent :level] 0)]
       (-> stream
-          (move-text-position-right (* indent indent-level))
+          #_(move-text-position-right (* indent indent-level))
           (set-font font size (:style list-number) context)
           (set-color color)
-          (draw-string number)))))
+          (draw-string number)
+          (move-text-position-right (* indent indent-level))))))
 
