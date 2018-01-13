@@ -48,6 +48,17 @@
         ;(println (str "tokens::Word::width -> LEAVE (" res ")"))
         res))))
 
+(defrecord Space [style]
+  Dimensions
+  (height [this formats context]
+    (single-line-height this formats context))
+
+  (width [this formats context]
+    (assert (keyword? (:format style)))
+    (let [{:keys [font size style] :as formatting} (get formats (:format style))
+          character-style (into style (:character-style style))]
+      (context/get-font-string-width font character-style size " " context))))
+
 (defrecord NewLine [style]
   Dimensions
   (height [this formats context]

@@ -9,12 +9,15 @@
 
 (defn- tokenize-str*
   [s style]
-  (map (partial token/->Word style) (clojure.string/split s #" ")))
+  (butlast
+    (interleave
+      (map (partial token/->Word style) (clojure.string/split s #" "))
+      (repeat (token/->Space style)))))
 
 (extend-type java.lang.String
   Tokenizable
-  
-  (tokenize 
+
+  (tokenize
     ([s] (tokenize s nil))
     ([s style] (tokenize-str* s style))))
 
@@ -24,7 +27,7 @@
 
 (extend-type clojure.lang.LazySeq
   Tokenizable
-  
+
   (tokenize
     ([s] (tokenize s nil))
     ([s style] (tokenize-seq* s style))))

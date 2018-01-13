@@ -214,8 +214,17 @@
           {:keys [font size style color]} formatting]
       (-> stream
           (set-font font size (into style character-style) context)
-          (draw-string (:word word))
-          (set-color color))))
+          (set-color color)
+          (draw-string (:word word)))))
+
+  pdf_stamper.tokenizer.tokens.Space
+  (stamp! [space stream formatting context]
+    (let [{:keys [character-style]} (:style space)
+          {:keys [font size style color]} formatting]
+      (-> stream
+          (set-font font size (into style character-style) context)
+          (set-color color)
+          (draw-string " "))))
 
   pdf_stamper.tokenizer.tokens.NewLine
   (stamp! [newline stream formatting context]

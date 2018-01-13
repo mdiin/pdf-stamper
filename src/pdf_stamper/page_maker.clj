@@ -73,6 +73,17 @@
 
   (horizontal-increase? [_] false)
 
+  pdf_stamper.tokenizer.tokens.Space
+  (select [token {:as remaining-space :keys [width height]} formats context]
+    (cond
+      (<= (p/width token formats context) width)
+      [token]
+
+      :default
+      nil))
+
+  (horizontal-increase? [_] false)
+
   pdf_stamper.tokenizer.tokens.ListBullet
   (select [token {:as remaining-space :keys [width height]} formats context]
     (cond
