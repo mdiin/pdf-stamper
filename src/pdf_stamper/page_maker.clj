@@ -88,7 +88,7 @@
   (select [token {:as remaining-space :keys [width height]} formats context]
     (cond
       ;; No more room on line, issue warning
-      (<= (p/width token formats context) width)
+      (<= width (p/width token formats context))
       (do
         (println "WARNING: Hole for bullet paragraph narrower than bullet character!")
         [token])
@@ -103,7 +103,7 @@
   (select [token {:as remaining-space :keys [width height]} formats context]
     (cond
       ;; No more room on line, issue warning
-      (<= (p/width token formats context) width)
+      (<= width (p/width token formats context))
       (do
         (println "WARNING: Hole for number paragraph narrower than number!")
         [token])
@@ -170,7 +170,7 @@
   (select [_ _ _ _] nil)
   (horizontal-increase? [_] false))
 
-(defn- maybe-inc-height
+(defn- calc-selected-height
   [orig-sheight tokens formats context]
   {:post [(number? %)]}
   (let [height-increase-tokens (filter p/horizontal-increase? tokens)
@@ -179,6 +179,15 @@
                                      height-increase-tokens))]
     (let [res (+ orig-sheight total-increase)]
       res)))
+
+(defn- calc-selected-width
+  [orig-swidth tokens formats context]
+  (let [d-width (reduce + 0 (map
+                                 #(p/width % formats context)
+                                 tokens))]
+    (if (some p/horizontal-increase? tokens)
+      d-width
+      (+ orig-swidth d-width))))
 
 (defn- all-tokens
   [tokens]
@@ -205,8 +214,8 @@
           (recur (-> acc
                      (update-in [:selected] into tokens)
                      (update-in [:remaining] (partial drop 1))
-                     (update-in [:selected-width] + (p/width (first remaining) formats context))
-                     (update-in [:selected-height] maybe-inc-height tokens formats context)))
+                     (update-in [:selected-width] calc-selected-width tokens formats context)
+                     (update-in [:selected-height] calc-selected-height tokens formats context)))
           (select-keys acc [:selected :remaining]))))))
 
 ;; 4b. Add those tokens to the page in that hole (use the template as the base)
