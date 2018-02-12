@@ -1,8 +1,8 @@
 {:name :template-1
  :overflow :template-1
  :holes {:even [{:name :background
-                 :height 150.0
-                 :width 80.0
+                 :height 350.0
+                 :width 180.0
                  :x 10.0
                  :y 10.0
                  :type :image
@@ -10,8 +10,8 @@
                  :priority 1}
 
                 {:name :text
-                 :height 150.0
-                 :width 80.0
+                 :height 350.0
+                 :width 180.0
                  :x 10.0
                  :y 10.0
                  :type :text-parsed
@@ -72,8 +72,8 @@
                                                     :above 0}}}}
                  :priority 2}]
          :odd [{:name :background
-                :height 150.0
-                :width 80.0
+                :height 350.0
+                :width 180.0
                 :x 10.0
                 :y 10.0
                 :type :image
@@ -81,8 +81,8 @@
                 :priority 1}
 
                {:name :text
-                :height 150.0
-                :width 80.0
+                :height 350.0
+                :width 180.0
                 :x 10.0
                 :y 10.0
                 :type :text-parsed
