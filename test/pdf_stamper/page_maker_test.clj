@@ -9,8 +9,8 @@
     [pdf-stamper.test-generators :as pdf-gen]
 
     [pdf-stamper.page-maker :as pm]
-    [pdf-stamper.protocols :as p]
     [pdf-stamper.tokenizer.tokens :as t]
+    [pdf-stamper.tokenizer.protocols :as p]
     [pdf-stamper.context :as context]))
 
 (def splitting-tokens-honours-max-line-width-prop
