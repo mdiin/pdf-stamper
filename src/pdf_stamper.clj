@@ -289,12 +289,14 @@
                                                   (context/embed-font document font style context))
                                                 context
                                                 (:fonts-to-embed context))
+            pa (mapcat #(page-maker/data->pages % context-with-embedded-fonts) data)
+            _ (println "" #_(clojure.pprint/pprint pa))
             pages (into []
                         (comp
                           (strip-pages context-with-embedded-fonts)
                           (add-filler context-with-embedded-fonts)
                           (annotate-side context-with-embedded-fonts))
-                        (mapcat #(page-maker/data->pages % context-with-embedded-fonts) data))
+                        pa)
             open-documents (doall (map #(fill-page document % context-with-embedded-fonts) pages))]
         (.save document output)
         (doseq [doc (flatten open-documents)]

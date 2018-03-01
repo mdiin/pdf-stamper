@@ -138,12 +138,8 @@
 
   pdf_stamper.tokenizer.tokens.ParagraphEnd
   (select [token {:as remaining-space :keys [width height]} formats context]
-    (cond
-      (<= (p/height token formats context) height)
-      [token]
-
-      :default
-      nil))
+    ;; Always room for a paragraph to end.
+    [token])
 
   (horizontal-increase? [_] true)
 
@@ -210,6 +206,7 @@
     (loop [{:as acc :keys [selected remaining selected-height selected-width]} init-state]
       (let [remaining-space {:width (- hwidth selected-width)
                              :height (- hheight selected-height)}]
+        ;; TODO: We need to know which tokens are (not) allowed to be the first on a page, e.g. ParagraphBegin and Space
         (if-let [tokens (p/select (first remaining) remaining-space formats context)]
           (recur (-> acc
                      (update-in [:selected] into tokens)
@@ -278,11 +275,25 @@
      (hash-map hole {:contents selected})]))
 
 (defn- contains-parsed-text-holes?
+  "Does data contain contents for any holes that are of the type :text-parsed?"
   [data template-holes]
   (let [hole-types (into {} (map (juxt :name :type) template-holes))]
-    (some #{:parsed-text}
-          (map #(get-in hole-types [% :type])
-               (keys (:locations data))))))
+    (some #{:text-parsed}
+          (map #(get hole-types %) (into []
+                                         (comp
+                                           (filter (comp seq :text :contents second))
+                                           (map first))
+                                         data)))))
+
+(comment
+  (def data {:text {:contents {:text '("A" "B")}}
+             :not-text {:contents {:image "an image buffer"}}})
+  (def data' (assoc-in data [:text :contents :text] '()))
+  (def template-holes [{:name :text :type :text-parsed}
+                       {:name :non-text :type :image}])
+  (contains-parsed-text-holes? data template-holes) ;=> :text-parsed
+  (contains-parsed-text-holes? data' template-holes) ;=> nil
+  )
 
 (defn data->pages
   "Convert a single map describing a number of pages to a vector of maps
@@ -309,12 +320,14 @@
           overflow-template (context/get-template-overflow template-name context) ;; 6.
           overflow {:template overflow-template
                     :locations (apply merge (map first processed-holes))}]
+      (println (clojure.pprint/pprint overflow))
+      (println (map type (get-in overflow [:locations :text :contents :text])))
       (if (and overflow-template
                (contains-parsed-text-holes?
                  (:locations overflow)
                  (context/template-holes-any template-name context)))
         (recur ;; 7.
-          (conj pages current-page)
-          overflow)
+               (conj pages current-page)
+               overflow)
         (conj pages current-page)))))
 
