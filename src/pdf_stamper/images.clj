@@ -45,8 +45,8 @@
                                                         :b-height height
                                                         :i-width img-width
                                                         :i-height img-height})
-        new-x (+ x (Math/abs (/ (- width scaled-width) 2)))
-        new-y (+ y (Math/abs (/ (- height scaled-height) 2)))]
+        new-x (+ x (Math/abs (double (/ (- width scaled-width) 2))))
+        new-y (+ y (Math/abs (double (/ (- height scaled-height) 2))))]
     (.. c-stream (drawXObject image new-x new-y scaled-width scaled-height))))
 
 (defn- draw-image
