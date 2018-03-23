@@ -174,6 +174,9 @@
 
 (defn write-text
   [c-stream formatting tokens context]
+  (when-let [first-token-format (get-in (first tokens) [:style :format])]
+    (let [{:keys [font size style]} (get formatting (get-in (first tokens) [:style :format]))]
+      (new-line-by-font c-stream font size style context)))
   (doseq [token tokens]
     (p/stamp! token c-stream (get formatting (get-in token [:style :format])) context))
   c-stream)
