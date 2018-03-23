@@ -72,7 +72,7 @@
              tokens-remaining]
 
             :default
-            [tokens-selected nil tokens-remaining])]
+            [tokens-selected nil (into [token] tokens-remaining)])]
       res))
 
   (horizontal-increase? [_] false)
@@ -82,7 +82,8 @@
     (cond
       (<= (p/width token formats context) width)
       (if (seq tokens-selected)
-        [tokens-selected [token] tokens-remaining])
+        [tokens-selected [token] tokens-remaining]
+        [tokens-selected nil tokens-remaining])
 
       :default
       [tokens-selected nil tokens-remaining]))
@@ -139,7 +140,7 @@
       [tokens-selected [token] tokens-remaining]
 
       :default
-      [tokens-selected nil tokens-remaining]))
+      [tokens-selected nil (into [token] tokens-remaining)]))
 
   (horizontal-increase? [_] true)
 
@@ -158,7 +159,7 @@
       [tokens-selected [token] tokens-remaining]
 
       :default
-      [tokens-selected nil tokens-remaining]))
+      [tokens-selected nil (into [token] tokens-remaining)]))
 
   (horizontal-increase? [_] true)
 
@@ -298,7 +299,7 @@
                                        {:hheight height :hwidth width}
                                        format
                                        context)]
-    [(hash-map hole (assoc-in data [:contents :text] (vary-meta remaining assoc :tokenized? true)))
+    [(hash-map hole (assoc-in data [:contents :text] ((fnil vary-meta []) remaining assoc :tokenized? true)))
      (hash-map hole {:contents selected})]))
 
 (defn- contains-parsed-text-holes?
