@@ -85,8 +85,7 @@
   (height [this formats context]
     ;(println "Tokens::ParapgraphEnd::height")
     (let [formatting (get formats (:format style))]
-      (+ (single-line-height this formats context)
-         (get-in formatting [:spacing :paragraph :below]))))
+      (get-in formatting [:spacing :paragraph :below])))
 
   (width [this formats context]
     0.0))
