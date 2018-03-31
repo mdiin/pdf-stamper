@@ -58,15 +58,13 @@
   (select [token [tokens-selected tokens-remaining] {:as remaining-space :keys [width height]} formats context]
     (let [res (cond
             ;; Room for one more on the line
-            (and
-              (<= (p/width token formats context) width)
-              (<= (p/height token formats context) height))
+            (<= (p/width token formats context) width)
             [tokens-selected [token] tokens-remaining]
 
             ;; No more room on line, but room for one more line
             (and
               (> (p/width token formats context) width)
-              (<= (* (p/height token formats context) 2) height))
+              (<= (* (p/height token formats context) 1) height))
             [tokens-selected
              [(t/->NewLine (:style token)) token]
              tokens-remaining]
@@ -86,7 +84,7 @@
         [tokens-selected nil tokens-remaining])
 
       :default
-      [tokens-selected nil tokens-remaining]))
+      [tokens-selected [(t/->NewLine (:style token))] tokens-remaining]))
 
   (horizontal-increase? [_] false)
 
@@ -224,6 +222,9 @@
                                               remaining-space
                                               formats
                                               context)]
+          (when-not tokens
+            (println (first remaining))
+            (clojure.pprint/pprint acc))
           (if tokens
             (recur (-> acc
                        (assoc-in [:selected] (into selected* tokens))

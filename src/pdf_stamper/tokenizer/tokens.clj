@@ -33,7 +33,13 @@
   Dimensions
   (height [this formats context]
     ;(println "Tokens::Word::height")
-    (single-line-height this formats context))
+    (let [formatting (get formats (:format (:style this)))]
+      (+ (context/get-font-height
+           (:font formatting)
+           (:character-style (:style this))
+           (:size formatting)
+           context)
+         (get-in formatting [:spacing :line :above]))))
 
   (width [this formats context]
     ;(println (str "tokens::Word::width -> ENTER"))
