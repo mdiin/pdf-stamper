@@ -3,9 +3,15 @@
 ;; ## Token functions
 ;;
 (defprotocol Dimensions
-  "Deriving information from tokens."
-  (width [token formats context])
-  (height [token formats context]))
+  "The dimensions of token when stamped."
+  (width [token following-tokens formats context]
+         "Stamped width of token, optionally considering a seq of tokens immediately following token.
+
+         following-tokens can be either a function or a seq of tokens.")
+  (height [token following-tokens formats context]
+          "Stamped height of token, optionally considering a seq of tokens immediately following token.
+
+          following-tokens can be either a function or a seq of tokens."))
 
 (defprotocol Selectable
   "Decision protocol: Is there room for `token` or not?"
