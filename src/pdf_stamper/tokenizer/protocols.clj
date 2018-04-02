@@ -4,14 +4,14 @@
 ;;
 (defprotocol Dimensions
   "The dimensions of token when stamped."
-  (width [token following-tokens formats context]
+  (width [token xf following-tokens formats context]
          "Stamped width of token, optionally considering a seq of tokens immediately following token.
 
-         following-tokens can be either a function or a seq of tokens.")
-  (height [token following-tokens formats context]
+         xf is a transducing function applied to filter the seq of following-tokens.")
+  (height [token xf following-tokens formats context]
           "Stamped height of token, optionally considering a seq of tokens immediately following token.
 
-          following-tokens can be either a function or a seq of tokens."))
+          xf is a transducing function applied to filter the seq of following-tokens."))
 
 (defprotocol Selectable
   "Decision protocol: Is there room for `token` or not?"

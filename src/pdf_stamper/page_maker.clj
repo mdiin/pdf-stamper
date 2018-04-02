@@ -52,39 +52,61 @@
 ;; 3-4c
 ;;
 
+(defn wild-xform
+  "A general transducer for specifying filters based on arbitrary properties,
+  calculations on those properties, and predicates on those properties.
+
+  Stateful transducer, where calc-fn is applied to the previous results of
+  applying property-fn and the result of applying property-fn to the current
+  input.
+
+  pred-fn is applied to (calc-fn previous-calced-values current-property)."
+  [property-fn calc-fn pred-fn]
+  (fn [xf]
+    (let [s (volatile! nil)]
+      (fn
+        ([] (xf))
+        ([result] (xf result))
+        ([result input]
+         (let [prop (property-fn input)
+               new-s (vswap! s calc-fn prop)]
+           (if (pred-fn new-s)
+             (xf result input)
+             result)))))))
+
+(comment
+  (def wxf (wild-xform count (fnil + 0) #(<= % 80))))
+
+(defn take-until-width-xf
+  [max-width formats context]
+  (wild-xform #(p/width % nil nil formats context)
+              (fnil + 0)
+              #(<= % max-width)))
+
 ;; 4a. Take the number of tokens for which there is room in the hole
 (extend-protocol p/Selectable
   pdf_stamper.tokenizer.tokens.Word
   (select [token [tokens-selected tokens-remaining] {:as remaining-space :keys [width height]} formats context]
-    (let [res (cond
-            ;; Room for one more on the line
-            (<= (p/width token formats context) width)
-            [tokens-selected [token] tokens-remaining]
-
-            ;; No more room on line, but room for one more line
-            (and
-              (> (p/width token formats context) width)
-              (<= (* (p/height token formats context) 1) height))
-            [tokens-selected
-             [(t/->NewLine (:style token)) token]
-             tokens-remaining]
-
-            :default
-            [tokens-selected nil (into [token] tokens-remaining)])]
-      res))
+    (if (<= (p/width token nil nil formats context) width)
+      [tokens-selected token tokens-remaining]
+      [tokens-selected
+       ::skip-token
+       (into
+         [(t/->NewLine (:style token)) token]
+         tokens-remaining)]))
 
   (horizontal-increase? [_] false)
 
   pdf_stamper.tokenizer.tokens.Space
   (select [token [tokens-selected tokens-remaining] {:as remaining-space :keys [width height]} formats context]
     (cond
-      (<= (p/width token formats context) width)
+      (<= (p/width token nil nil formats context) width)
       (if (seq tokens-selected)
-        [tokens-selected [token] tokens-remaining]
-        [tokens-selected nil tokens-remaining])
+        [tokens-selected token tokens-remaining]
+        [tokens-selected ::skip-token tokens-remaining])
 
       :default
-      [tokens-selected [(t/->NewLine (:style token))] tokens-remaining]))
+      [tokens-selected ::skip-token (into [(t/->NewLine (:style token))] tokens-remaining)]))
 
   (horizontal-increase? [_] false)
 
@@ -92,13 +114,13 @@
   (select [token [tokens-selected tokens-remaining] {:as remaining-space :keys [width height]} formats context]
     (cond
       ;; No more room on line, issue warning
-      (<= width (p/width token formats context))
+      (<= width (p/width token nil nil formats context))
       (do
         (println "WARNING: Hole for bullet paragraph narrower than bullet character!")
         [tokens-selected nil tokens-remaining])
 
       :default
-      [tokens-selected [token] tokens-remaining]
+      [tokens-selected token tokens-remaining]
       ))
 
   (horizontal-increase? [_] false)
@@ -107,13 +129,13 @@
   (select [token [tokens-selected tokens-remaining] {:as remaining-space :keys [width height]} formats context]
     (cond
       ;; No more room on line, issue warning
-      (<= width (p/width token formats context))
+      (<= width (p/width token nil nil formats context))
       (do
         (println "WARNING: Hole for number paragraph narrower than number!")
         [tokens-selected nil tokens-remaining])
 
       :default
-      [tokens-selected [token] tokens-remaining]))
+      [tokens-selected token tokens-remaining]))
 
   (horizontal-increase? [_] false)
 
@@ -121,10 +143,16 @@
   (select [token [tokens-selected tokens-remaining :as token-context] {:as remaining-space :keys [width height]} formats context]
     (cond
       ;; Room for one more line
-      (<= (p/height token formats context) height)
+      (<= (p/height
+            token
+            (take-until-width-xf width formats context)
+            tokens-remaining
+            formats
+            context)
+          height)
       (if (seq tokens-selected)
-        [tokens-selected [token] tokens-remaining]
-        [tokens-selected nil tokens-remaining])
+        [tokens-selected token tokens-remaining]
+        [tokens-selected ::skip-token tokens-remaining])
 
       :default
       [tokens-selected nil tokens-remaining]))
@@ -134,18 +162,18 @@
   pdf_stamper.tokenizer.tokens.ParagraphBegin
   (select [token [tokens-selected tokens-remaining] {:as remaining-space :keys [width height]} formats context]
     (cond
-      (<= (p/height token formats context) height)
-      [tokens-selected [token] tokens-remaining]
+      (<= (p/height token nil nil formats context) height)
+      [tokens-selected token tokens-remaining]
 
       :default
-      [tokens-selected nil (into [token] tokens-remaining)]))
+      [tokens-selected nil tokens-remaining]))
 
   (horizontal-increase? [_] true)
 
   pdf_stamper.tokenizer.tokens.ParagraphEnd
   (select [token [tokens-selected tokens-remaining] {:as remaining-space :keys [width height]} formats context]
     ;; Always room for a paragraph to end.
-    [tokens-selected [token] tokens-remaining])
+    [tokens-selected token tokens-remaining])
 
   (horizontal-increase? [_] true)
 
@@ -153,8 +181,8 @@
   (select [token [tokens-selected tokens-remaining] {:as remaining-space :keys [width height]} formats context]
     (cond
       ;; Room for a new paragraph
-      (<= (p/height token formats context) height)
-      [tokens-selected [token] tokens-remaining]
+      (<= (p/height token nil nil formats context) height)
+      [tokens-selected token tokens-remaining]
 
       :default
       [tokens-selected nil (into [token] tokens-remaining)]))
@@ -164,7 +192,7 @@
   pdf_stamper.tokenizer.tokens.NewPage
   (select [token [tokens-selected tokens-remaining] {:as remaining-space :keys [width height]} formats context]
     ;; Always room for a page break...
-    [tokens-selected [token] tokens-remaining])
+    [tokens-selected token tokens-remaining])
 
   (horizontal-increase? [_] true)
 
@@ -176,63 +204,46 @@
                       (partial satisfies? p/Selectable)))
 (s/def ::tokens (s/coll-of ::token))
 
-(defn- calc-selected-height
-  [orig-sheight tokens formats context]
-  (let [height-increase-tokens (filter p/horizontal-increase? tokens)
-        total-increase (reduce + 0 (map
-                                     #(p/height % formats context)
-                                     height-increase-tokens))]
-    (let [res (+ orig-sheight total-increase)]
-      res)))
-(s/fdef calc-selected-height
-  :args (s/cat :orig-swidth number?
-               :tokens ::tokens
-               :formats map?
-               :context map?)
-  :ret number?)
-
-(defn calc-selected-width
-  [orig-swidth tokens formats context]
-  (let [d-width (reduce + 0 (map
-                              #(p/width % formats context)
-                              tokens))]
-    (if (some p/horizontal-increase? tokens)
-      d-width
-      (+ orig-swidth d-width))))
-(s/fdef calc-selected-width
-  :args (s/cat :orig-swidth number?
-               :tokens ::tokens
-               :formats map?
-               :context map?)
-  :ret number?)
-
 (defn split-tokens
   [tokens {:as hole-dimensions :keys [hheight hwidth]} formats context]
-  (let [first-token (first tokens)
-        init-state {:selected []
+  (let [init-state {:selected []
                     :remaining tokens
-                    :selected-height (if first-token (p/height first-token formats context) 0)
+                    :selected-height 0
                     :selected-width 0}]
     (loop [{:as acc :keys [selected remaining selected-height selected-width]} init-state]
       (let [remaining-space {:width (- hwidth selected-width)
                              :height (- hheight selected-height)}]
-        (let [[selected* tokens remaining*] (p/select
+        (let [[selected* token remaining*] (p/select
                                               (first remaining)
                                               [selected (drop 1 remaining)]
                                               remaining-space
                                               formats
                                               context)]
-          (when-not tokens
+          (println token)
+          (println (str "Remaining space: " remaining-space))
+          (when-not token
             (println (first remaining))
-            (clojure.pprint/pprint acc))
-          (if tokens
-            (recur (-> acc
-                       (assoc-in [:selected] (into selected* tokens))
-                       (assoc-in [:remaining] remaining*)
-                       (update-in [:selected-width] calc-selected-width tokens formats context)
-                       (update-in [:selected-height] calc-selected-height tokens formats context)))
-            {:selected selected*
-             :remaining remaining*}))))))
+            #_(clojure.pprint/pprint acc))
+          (cond
+            (nil? token) {:selected selected*
+                          :remaining remaining*}
+            (= ::skip-token token) (recur (-> acc
+                                              (assoc-in [:selected] selected*)
+                                              (assoc-in [:remaining] remaining*)))
+            (p/horizontal-increase? token) (recur (-> acc
+                                                      (assoc-in [:selected] (conj selected* token))
+                                                      (assoc-in [:remaining] remaining*)
+                                                      (assoc-in [:selected-width] 0)
+                                                      (update-in [:selected-height] + (p/height
+                                                                                        token
+                                                                                        (take-until-width-xf hwidth formats context)
+                                                                                        remaining*
+                                                                                        formats
+                                                                                        context))))
+            :else (recur (-> acc
+                             (assoc-in [:selected] (conj selected* token))
+                             (assoc-in [:remaining] remaining*)
+                             (update-in [:selected-width] + (p/width token nil remaining* formats context))))))))))
 (s/def ::hheight number?)
 (s/def ::hwidth number?)
 (s/def ::selected ::tokens)
