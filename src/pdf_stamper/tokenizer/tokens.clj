@@ -32,7 +32,7 @@
 (defrecord Word [style word]
   Dimensions
   (height [this _ _ formats context]
-    ;(println "Tokens::Word::height")
+    (println "Tokens::Word::height")
     (let [formatting (get formats (:format (:style this)))]
       (context/get-font-height
         (:font formatting)
@@ -45,11 +45,11 @@
     (assert (keyword? (:format style)))
     (let [formatting (get formats (:format style))]
       (let [res (context/get-font-string-width
-              (:font formatting)
-              (:character-style style)
-              (:size formatting)
-              word
-              context)]
+                  (:font formatting)
+                  (:character-style style)
+                  (:size formatting)
+                  word
+                  context)]
         ;(println (str "tokens::Word::width -> LEAVE (" res ")"))
         res))))
 
@@ -82,9 +82,13 @@
                     (take-while (complement p/horizontal-increase?))
                     (map #(p/height % nil following-tokens formats context))))
           formatting (get formats (:format style))]
-      (let [r (+ (transduce xform max 0 (or following-tokens []))
+      (let [txv (transduce xform max 0 (or following-tokens []))
+            r (+ txv
                  (get-in formatting [:spacing :line :above])
                  (get-in formatting [:spacing :line :below]))]
+        (clojure.pprint/pprint following-tokens)
+        (println (str "Formatting: " formatting))
+        (println (str "transduce value: " txv))
         (println (str "NewLine height: " r))
         r)))
 
@@ -94,7 +98,7 @@
 (defrecord ParagraphBegin [style]
   Dimensions
   (height [this xf following-tokens formats context]
-    ;(println "Tokens::ParapgraphBegin::height")
+    (println "Tokens::ParapgraphBegin::height")
     (let [xform (if (fn? xf)
                   (comp
                     xf
@@ -104,8 +108,10 @@
                     (take-while (complement p/horizontal-increase?))
                     (map #(p/height % nil following-tokens formats context))))
           formatting (get formats (:format style))]
-      (+ (transduce xform max 0 (or following-tokens []))
-         (get-in formatting [:spacing :paragraph :above]))))
+      (let [r (+ (transduce xform max 0 (or following-tokens []))
+                 (get-in formatting [:spacing :paragraph :above]))]
+        (println (str "Height: " r))
+        r)))
 
   (width [this _ _ formats context]
     0.0))

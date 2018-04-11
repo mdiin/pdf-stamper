@@ -240,7 +240,7 @@
 
   pdf_stamper.tokenizer.tokens.ParagraphBegin
   (stamp! [paragraph-begin stream formatting context]
-    (let [{:keys [font size style spacing]} formatting
+    (let [{:keys [font size style]} formatting
           spacing (get-in formatting [:spacing :paragraph])]
       (-> stream
           (new-line-by-font font size style context)
