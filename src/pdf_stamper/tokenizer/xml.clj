@@ -75,7 +75,7 @@
      :i (t-em (:content elm-or-str) style)
      :strong (t-strong (:content elm-or-str) style)
      :b (t-strong (:content elm-or-str) style)
-     (tokenize (:content elm-or-str) style))))
+     (into [] (flatten (tokenize (:content elm-or-str) style))))))
 
 (extend-type clojure.data.xml.Element
   Tokenizable
