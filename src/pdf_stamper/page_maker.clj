@@ -152,7 +152,11 @@
             context)
           remaining-height)
       (if (seq tokens-selected)
-        [tokens-selected token tokens-remaining]
+        [(into
+           tokens-selected
+           [(t/->LineEnd (:style token)) (t/->LineBegin (:style token))])
+         token
+         tokens-remaining]
         [tokens-selected ::skip-token tokens-remaining])
 
       :default
@@ -212,7 +216,7 @@
 (s/def ::tokens (s/coll-of ::token))
 
 (defn split-tokens
-  [tokens {:as hole-dimensions :keys [hheight hwidth]} formats context]
+  [tokens {:as hole-dimensions :keys [hheight hwidth]} formats blacklist context]
   (let [init-state {:selected []
                     :remaining tokens
                     :selected-height 0
@@ -244,7 +248,9 @@
             (p/horizontal-increase? token) (do
                                              (println "Increasing height")
                                              (recur (-> acc
-                                                        (assoc-in [:selected] (conj selected* token))
+                                                        (assoc-in [:selected] (if (some #{(type token)} blacklist)
+                                                                                (conj selected* token)
+                                                                                selected*))
                                                         (assoc-in [:remaining] remaining*)
                                                         (assoc-in [:selected-width] 0)
                                                         (update-in [:selected-height] + (p/height
@@ -265,6 +271,7 @@
   :args (s/cat :tokens ::tokens
                :kwargs (s/keys :req-un [::hheight ::hwidth])
                :formats map?
+               :blacklist set?
                :context map?)
   :ret (s/keys :req-un [::selected ::remaining]))
 
@@ -323,6 +330,7 @@
                                        tokens
                                        {:hheight height :hwidth width}
                                        format
+                                       #{"NewLine"}
                                        context)]
     [(hash-map hole (assoc-in data [:contents :text] ((fnil vary-meta []) remaining assoc :tokenized? true)))
      (hash-map hole {:contents selected})]))

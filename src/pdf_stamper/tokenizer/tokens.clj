@@ -82,15 +82,9 @@
                     (take-while (complement p/horizontal-increase?))
                     (map #(p/height % nil following-tokens formats context))))
           formatting (get formats (:format style))]
-      (let [txv (transduce xform max 0 (or following-tokens []))
-            r (+ txv
-                 (get-in formatting [:spacing :line :above])
-                 (get-in formatting [:spacing :line :below]))]
-        (clojure.pprint/pprint following-tokens)
-        (println (str "Formatting: " formatting))
-        (println (str "transduce value: " txv))
-        (println (str "NewLine height: " r))
-        r)))
+      (+ (transduce xform max 0 (or following-tokens []))
+         (get-in formatting [:spacing :line :above])
+         (get-in formatting [:spacing :line :below]))))
 
   (width [this _ _ formats context]
     0.0))
@@ -178,4 +172,30 @@
                          context)
           text-spacing (get formatting :text-spacing (:size formatting))]
       (+ number-width text-spacing))))
+
+;; Internal tokens:
+
+(defrecord LineBegin [style]
+  Dimensions
+  (height [this xf following-tokens formats context]
+    (let [xform (if (fn? xf)
+                  (comp
+                    xf
+                    (take-while (complement p/horizontal-increase?))
+                    (map #(p/height % nil following-tokens formats context)))
+                  (comp
+                    (take-while (complement p/horizontal-increase?))
+                    (map #(p/height % nil following-tokens formats context))))
+          formatting (get formats (:format style))]
+      (+ (transduce xform max 0 (or following-tokens []))
+         (get-in formatting [:spacing :line :above]))))
+
+  (width [_ _ _ _ _]
+    0.0))
+
+(defrecord LineEnd [style]
+  Dimensions
+  (height [_ _ _ formats _]
+    (let [formatting (get formats (:format style))]
+      (get-in formatting [:spacing :line :below]))))
 

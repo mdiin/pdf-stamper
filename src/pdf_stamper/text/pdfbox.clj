@@ -178,6 +178,7 @@
     (let [{:keys [font size style]} (get formatting (get-in (first tokens) [:style :format]))]
       (new-line-by-font c-stream font size style context)))
   (doseq [token tokens]
+    (println token)
     (p/stamp! token c-stream (get formatting (get-in token [:style :format])) context))
   c-stream)
 
@@ -229,14 +230,17 @@
           (set-color color)
           (draw-string " "))))
 
-  pdf_stamper.tokenizer.tokens.NewLine
+  pdf_stamper.tokenizer.tokens.LineBegin
   (stamp! [newline stream formatting context]
     (let [{:keys [font size style]} formatting
           spacing (get-in formatting [:spacing :line])]
       (-> stream
           (move-text-position-down (:above spacing))
-          (new-line-by-font font size style context)
-          (move-text-position-down (:below spacing)))))
+          (new-line-by-font font size style context))))
+
+  pdf_stamper.tokenizer.tokens.LineEnd
+  (stamp! [line-end stream formatting context]
+    (move-text-position-down stream (get-in formatting [:spacing :line :below])))
 
   pdf_stamper.tokenizer.tokens.ParagraphBegin
   (stamp! [paragraph-begin stream formatting context]
