@@ -30,28 +30,48 @@
        (get-in formatting [:spacing :paragraph :below]))))
 
 (defrecord Word [style word]
-  Dimensions
+  p/Styling
+  (styling [this formats]
+    (let [paragraph-format (get-in this [:style :format])
+          paragraph-properties (get formats paragraph-format)]
+      (update
+        (select-keys paragraph-properties [:font :style :size :color])
+        :style
+        (fn [s]
+          (disj s (get-in this [:style :character-style]))))))
+
+  p/Dimensions
   (height [this _ _ formats context]
-    (println "Tokens::Word::height")
-    (let [formatting (get formats (:format (:style this)))]
+    (let [styling (p/styling this formats)]
       (context/get-font-height
-        (:font formatting)
-        (:character-style (:style this))
-        (:size formatting)
+        (:font styling)
+        (:style styling)
+        (:size styling)
         context)))
 
   (width [this _ _ formats context]
-    ;(println (str "tokens::Word::width -> ENTER"))
     (assert (keyword? (:format style)))
-    (let [formatting (get formats (:format style))]
-      (let [res (context/get-font-string-width
-                  (:font formatting)
-                  (:character-style style)
-                  (:size formatting)
-                  word
-                  context)]
-        ;(println (str "tokens::Word::width -> LEAVE (" res ")"))
-        res))))
+    (let [styling (p/styling this formats)]
+      (context/get-font-string-width
+        (:font styling)
+        (:style styling)
+        (:size styling)
+        word
+        context)))
+
+  p/CursorMovement
+  (horizontal? [_] true)
+  (vertical? [_] false)
+
+  p/Selectable
+  (select [token [tokens-selected tokens-remaining] {:keys [remaining-width]} formats context]
+    (if (<= (p/width token nil nil formats context) remaining-width)
+      [tokens-selected token tokens-remaining]
+      [tokens-selected
+       ::skip-token
+       (into
+         [(->NewLine (:style token)) token]
+         tokens-remaining)])))
 
 (defrecord Space [style]
   Dimensions

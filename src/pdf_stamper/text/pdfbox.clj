@@ -178,7 +178,7 @@
     (let [{:keys [font size style]} (get formatting (get-in (first tokens) [:style :format]))]
       (new-line-by-font c-stream font size style context)))
   (doseq [token tokens]
-    (println token)
+    #_(println token)
     (p/stamp! token c-stream (get formatting (get-in token [:style :format])) context))
   c-stream)
 

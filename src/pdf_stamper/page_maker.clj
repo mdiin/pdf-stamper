@@ -233,10 +233,6 @@
                                               formats
                                               context)]
           (println token)
-          (println (str "Remaining space: " space))
-          (when-not token
-            (println (first remaining*))
-            #_(clojure.pprint/pprint acc))
           (cond
             (nil? token) {:selected selected*
                           :remaining remaining*}

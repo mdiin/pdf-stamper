@@ -7,11 +7,18 @@
   (width [token xf following-tokens formats context]
          "Stamped width of token, optionally considering a seq of tokens immediately following token.
 
-         xf is a transducing function applied to filter the seq of following-tokens.")
+  xf is a transducing function applied to filter the seq of following-tokens.")
   (height [token xf following-tokens formats context]
           "Stamped height of token, optionally considering a seq of tokens immediately following token.
 
-          xf is a transducing function applied to filter the seq of following-tokens."))
+  xf is a transducing function applied to filter the seq of following-tokens."))
+
+(defprotocol Styling
+  (styling [token formats] "The styling of token."))
+
+(defprotocol CursorMovement
+  (horizontal? [token] "Does token cause PDF cursor to move horizontally?")
+  (vertical? [token] "Does token cause PDF cursor to move vertically?"))
 
 (defprotocol Selectable
   "Decision protocol: Is there room for `token` or not?"
