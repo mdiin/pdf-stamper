@@ -386,3 +386,25 @@
                overflow)
         (conj pages current-page)))))
 
+(defprotocol Hole
+  (-add [hole item] "Returns a new Hole with the item added to the contents."))
+
+(defrecord ParsedTextHole [height width format contents]
+  Hole
+  (-add [hole item]
+    (update hole :contents (fn [cs]
+                             (if )))))
+
+(defn make-parsed-text-hole
+  [options]
+  (map->ParsedTextHole (assoc options :contents [])))
+
+(defrecord ImageHole [height width contents]
+  Hole
+  (-add [hole item]
+    (assoc hole :contents item)))
+
+(defn make-image-hole
+  [options]
+  (map->ImageHole options))
+
