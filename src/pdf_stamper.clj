@@ -19,7 +19,7 @@
   (:import
     [org.apache.pdfbox.cos COSDictionary COSName]
     [org.apache.pdfbox.pdmodel PDDocument PDPage]
-    [org.apache.pdfbox.pdmodel.edit PDPageContentStream]))
+    [org.apache.pdfbox.pdmodel PDPageContentStream]))
 
 ;; ## Templates
 ;;
