@@ -38,9 +38,8 @@
   scaled images delta width and height."
   [c-stream image data]
   (let [{:keys [x y width height]} data
-        awt-image (.. image (getRGBImage))
-        img-height (.. awt-image (getHeight))
-        img-width (.. awt-image (getWidth))
+        img-height (.. image (getHeight))
+        img-width (.. image (getWidth))
         [scaled-width scaled-height] (scale-dimensions {:b-width width
                                                         :b-height height
                                                         :i-width img-width
