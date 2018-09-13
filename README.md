@@ -1,11 +1,11 @@
-# This is still in very early stages of development.
-
-It is being used in production in Ingenium Golf, and has been for the last year, so it is pretty stable by now. Active development is happening mostly in branches, and only when I can find the time (or it intersects with the needs of Ingenium Golf).
-
 # pdf-stamper
 
 Combine JSON template description with PDF template files and input data to
 form a complete PDF.
+
+## Stability
+
+This project is being used in production by Ingenium Golf, and has been since its inception, so it is pretty stable by now. Active development is happening mostly in branches, and only when I can find the time (or it intersects with the needs of Ingenium Golf).
 
 ## Usage
 
@@ -21,13 +21,20 @@ To give a quick example of how a PDF template description could look, this is an
 
 ```clojure
 {:name :template-one-hole
- :holes [{:height 10.0
-          :width 10.0
-          :x 1.09
-          :y 3.12
-          :name :lonely-hole
-          :type :image
-          :priority 10}]}
+ :holes {:even [{:height 10.0
+                 :width 10.0
+                 :x 1.09
+                 :y 3.12
+                 :name :lonely-hole
+                 :type :image
+                 :priority 10}]
+         :odd [{:height 10.0
+                :width 10.0
+                :x 1.09
+                :y 3.12
+                :name :lonely-hole
+                :type :image
+                :priority 10}]}}
 ```
 
 It describes a hole on an actual PDF document page, where data (in this case an image) should be inserted. The data that
@@ -67,7 +74,7 @@ After that, in no particular order:
 
 # License
 
-Copyright © 2014 Matthias Diehn Ingesman
+Copyright © 2014-2018 Matthias Diehn Ingesman
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
