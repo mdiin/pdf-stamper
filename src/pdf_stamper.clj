@@ -19,7 +19,7 @@
   (:import
     [org.apache.pdfbox.cos COSDictionary COSName]
     [org.apache.pdfbox.pdmodel PDDocument PDPage]
-    [org.apache.pdfbox.pdmodel.edit PDPageContentStream]))
+    [org.apache.pdfbox.pdmodel PDPageContentStream]))
 
 ;; ## Templates
 ;;
@@ -237,7 +237,7 @@
             template-doc (if (odd? (inc (.getNumberOfPages document)))
                            (context/template-document-odd (:template page-data) context)
                            (context/template-document-even (:template page-data) context))
-            template-page (-> template-doc (.getDocumentCatalog) (.getAllPages) (.get 0))
+            template-page (-> template-doc (.getPage 0))
             template-c-stream (PDPageContentStream. document template-page true false)]
         (.addPage document template-page)
         (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)

@@ -14,7 +14,7 @@
     [pdf-stamper.schemas :as schemas])
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
-    [org.apache.pdfbox.pdmodel.font PDFont PDType1Font PDTrueTypeFont]))
+    [org.apache.pdfbox.pdmodel.font PDFont PDType0Font PDType1Font]))
 
 ;; ## Templates
 
@@ -117,7 +117,7 @@
   (let [t (template template-name context)
         file-uri (get-in t [:uri side])]
     (assert file-uri (str "file-uri is nil for template " template-name " on side " side))
-    (PDDocument/load file-uri)))
+    (PDDocument/load (io/file file-uri))))
 
 (defn template-document-even
   [template context]
@@ -221,7 +221,7 @@
   [doc font style context]
   (if-let [font-desc (get-in context [:fonts font style :desc])]
     (assoc-in context [:fonts font style] (with-open [font (io/input-stream font-desc)]
-                                            (PDTrueTypeFont/loadTTF doc font)))
+                                            (PDType0Font/load doc font)))
     context))
 
 (defn get-font
@@ -255,7 +255,17 @@
   "With complete knowledge of the string it is possible to get the exact width
   of the string."
   [font-name style size string context]
-  (let [font (get-font font-name style context)]
+  (let [font (get-font font-name style context)
+        failed-glyphs (reduce (fn [res c]
+                                (try
+                                  (.encode font (str c))
+                                  res
+                                  (catch IllegalArgumentException e
+                                    (conj res c))))
+                              []
+                              string)]
+    (assert (empty? failed-glyphs)
+            (str "Following glyphs not supported by font (" (.. font (getFontDescriptor) (getFontName)) " - " style "): " failed-glyphs))
     (* (/ (.. font (getStringWidth string)) 1000) size)))
 
 (defn get-font-descent

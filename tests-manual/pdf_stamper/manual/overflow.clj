@@ -12,7 +12,7 @@
 
 (def background (javax.imageio.ImageIO/read (clojure.java.io/as-file "test/templates/overflow/background.png")))
 (def text
-  "<pp><h1>Test</h1><p>This is a text that was written to test something about texts staying put within the given boundaries.</p><p>It was definitely not written to be read out load as it is missing all kinds of stops and pauses but it should look nice and a lot better than a random lorem ipsum.</p></pp>")
+  "<pp><p>This is a text that was written to test something about texts staying put within the given boundaries.</p><p>It was definitely not written to be read out load as it is missing all kinds of stops and pauses but it should look nice and a lot better than a random lorem ipsum.</p></pp>")
 
 (def context (->> base-context
                   (add-template template-1 template-pdf-1)))

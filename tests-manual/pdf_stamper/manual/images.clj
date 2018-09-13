@@ -7,7 +7,9 @@
 
 (def template-1 (edn/read-string (slurp "test/templates/image_quality/template-1.edn")))
 (def template-pdf-1 "test/templates/image_quality/template-1.pdf")
-(def image-1 (javax.imageio.ImageIO/read (clojure.java.io/as-file "test/templates/images/image.jpg")))
+#_(def template-pdf-1 (clojure.java.io/resource "test/templates/image_quality/template-1.pdf"))
+
+(def image-1 (javax.imageio.ImageIO/read (clojure.java.io/as-file "test/templates/image_quality/image.png")))
 
 (def context (->> base-context
                   (add-template template-1 template-pdf-1)
