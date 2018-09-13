@@ -5,7 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :scm {:name "git"
         :url "https://github.com/mdiin/pdf-stamper"}
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.9.0" :scope "provided"]
                  [org.clojure/data.xml "0.0.8"] ;; XML parsing
                  [org.apache.pdfbox/pdfbox "2.0.11"] ;; PDF
                  [potemkin "0.4.5"] ;; Code organisation
