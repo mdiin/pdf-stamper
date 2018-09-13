@@ -318,7 +318,7 @@
   (let [{:keys [font style width bullet-char elem size]} formatting
         font-width (context/get-average-font-width font style size context)
         indent-width (get-in formatting [:indent :all])
-        bullet (str (or bullet-char (char 149)))
+        bullet (str (or bullet-char \u2022))
         bullet-length (context/get-font-string-width font style size bullet context)
         ]
     (- width indent-width (if (= elem :bullet)
