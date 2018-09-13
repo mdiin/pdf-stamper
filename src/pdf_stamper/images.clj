@@ -5,8 +5,8 @@
 (ns pdf-stamper.images
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
-    [org.apache.pdfbox.pdmodel.edit PDPageContentStream]
-    [org.apache.pdfbox.pdmodel.graphics.xobject PDJpeg PDXObjectImage PDPixelMap]))
+    [org.apache.pdfbox.pdmodel PDPageContentStream]
+    [org.apache.pdfbox.pdmodel.graphics.image LosslessFactory]))
 
 (defn- scale-dimensions
   "To calculate the new dimensions for scaled images, the image
@@ -74,7 +74,7 @@
   [document c-stream data context]
   (let [aspect-ratio (get data :aspect :preserve)
         image-quality (get data :quality 0.75)
-        image (PDJpeg. document (get-in data [:contents :image]) image-quality)]
+        image (LosslessFactory/createFromImage document (get-in data [:contents :image]))]
     (assert image "Image must be present in hole contents.")
     (condp = aspect-ratio
       :preserve (draw-image-preserve-aspect c-stream image data)
