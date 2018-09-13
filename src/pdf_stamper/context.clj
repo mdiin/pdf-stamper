@@ -117,7 +117,7 @@
   (let [t (template template-name context)
         file-uri (get-in t [:uri side])]
     (assert file-uri (str "file-uri is nil for template " template-name " on side " side))
-    (PDDocument/load file-uri)))
+    (PDDocument/load (io/file file-uri))))
 
 (defn template-document-even
   [template context]
