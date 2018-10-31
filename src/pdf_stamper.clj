@@ -238,16 +238,17 @@
             template-doc (if (odd? (inc (.getNumberOfPages document)))
                            (context/template-document-odd (:template page-data) context)
                            (context/template-document-even (:template page-data) context))
-            template-page (-> template-doc (.getPage 0))
-            template-c-stream (PDPageContentStream. document template-page true false)]
-        (.addPage document template-page)
-        (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
+            template-page (-> template-doc (.getPage 0))]
+        (.importPage document template-page)
+        (let [inserted-page (.getPage document (dec (.getNumberOfPages document)))
+              template-c-stream (PDPageContentStream. document inserted-page true false)
+              overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
               overflow-page-data {:template template-overflow
                                   :locations (when (seq overflows)
                                                (merge (:locations page-data) overflows))}]
           (when-let [transforms (transform-page-with template (.getNumberOfPages document))]
             (doseq [t transforms]
-              (transform template-page t)))
+              (transform inserted-page t)))
           (.close template-c-stream)
           (concat fill-page-vec
                   (if (and (seq (:locations overflow-page-data))
