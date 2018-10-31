@@ -224,11 +224,12 @@
   (let [template (context/template (:template page-data) context)]
     (if (skip-page? template (inc (.getNumberOfPages document)))
       []
-      (let [fill-page-vec (when-let [fillers (seq (insert-before template (inc (.getNumberOfPages document))))]
-                            (doseq [filler fillers]
-                              (let [filler-data {:template filler
-                                                 :locations (:filler-locations page-data)}]
-                                (fill-page document filler-data context))))
+      (let [fill-page-vec (reduce (fn [acc filler]
+                                    (let [filler-data {:template filler
+                                                       :locations (:filler-locations page-data)}]
+                                      (into acc (fill-page document filler-data context))))
+                                  []
+                                  (insert-before template (inc (.getNumberOfPages document))))
             template-overflow (:overflow template)
             template-transforms (:transform-pages template)
             template-holes (if (odd? (inc (.getNumberOfPages document)))
