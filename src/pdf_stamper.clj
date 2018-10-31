@@ -224,11 +224,12 @@
   (let [template (context/template (:template page-data) context)]
     (if (skip-page? template (inc (.getNumberOfPages document)))
       []
-      (let [fill-page-vec (when-let [fillers (seq (insert-before template (inc (.getNumberOfPages document))))]
-                            (doseq [filler fillers]
-                              (let [filler-data {:template filler
-                                                 :locations (:filler-locations page-data)}]
-                                (fill-page document filler-data context))))
+      (let [fill-page-vec (reduce (fn [acc filler]
+                                    (let [filler-data {:template filler
+                                                       :locations (:filler-locations page-data)}]
+                                      (into acc (fill-page document filler-data context))))
+                                  []
+                                  (insert-before template (inc (.getNumberOfPages document))))
             template-overflow (:overflow template)
             template-transforms (:transform-pages template)
             template-holes (if (odd? (inc (.getNumberOfPages document)))
@@ -237,16 +238,17 @@
             template-doc (if (odd? (inc (.getNumberOfPages document)))
                            (context/template-document-odd (:template page-data) context)
                            (context/template-document-even (:template page-data) context))
-            template-page (-> template-doc (.getPage 0))
-            template-c-stream (PDPageContentStream. document template-page true false)]
-        (.addPage document template-page)
-        (let [overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
+            template-page (-> template-doc (.getPage 0))]
+        (.importPage document template-page)
+        (let [inserted-page (.getPage document (dec (.getNumberOfPages document)))
+              template-c-stream (PDPageContentStream. document inserted-page true false)
+              overflows (fill-holes document template-c-stream (sort-by :priority template-holes) page-data context)
               overflow-page-data {:template template-overflow
                                   :locations (when (seq overflows)
                                                (merge (:locations page-data) overflows))}]
           (when-let [transforms (transform-page-with template (.getNumberOfPages document))]
             (doseq [t transforms]
-              (transform template-page t)))
+              (transform inserted-page t)))
           (.close template-c-stream)
           (concat fill-page-vec
                   (if (and (seq (:locations overflow-page-data))
