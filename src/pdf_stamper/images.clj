@@ -6,7 +6,7 @@
   (:import
     [org.apache.pdfbox.pdmodel PDDocument]
     [org.apache.pdfbox.pdmodel PDPageContentStream]
-    [org.apache.pdfbox.pdmodel.graphics.image LosslessFactory]))
+    [org.apache.pdfbox.pdmodel.graphics.image LosslessFactory PDImageXObject]))
 
 (defn- scale-dimensions
   "To calculate the new dimensions for scaled images, the image
@@ -46,7 +46,7 @@
                                                         :i-height img-height})
         new-x (+ x (Math/abs (/ (- width scaled-width) 2)))
         new-y (+ y (Math/abs (/ (- height scaled-height) 2)))]
-    (.. c-stream (drawXObject image new-x new-y scaled-width scaled-height))))
+    (.. c-stream (drawImage image (float new-x) (float new-y) (float scaled-width) (float scaled-height)))))
 
 (defn- draw-image
   "Stamping an image onto the PDF's content stream without
@@ -55,7 +55,7 @@
   potentially skewing the image."
   [c-stream image data]
   (let [{:keys [x y width height]} data]
-    (.. c-stream (drawXObject image x y width height))))
+    (.. c-stream (drawImage image (float x) (float y) (float width) (float height)))))
 
 (defn fill-image
   "When stamping an image, the image is always shrunk to fit the
@@ -71,10 +71,10 @@
   *Note*: Using `PDJpeg` does not cancel out support for PNGs. It
   seems that the PNGs are internally converted to JPEGs (**TO BE
   CONFIRMED**)."
-  [document c-stream data context]
+  [document ^PDPageContentStream c-stream data context]
   (let [aspect-ratio (get data :aspect :preserve)
         image-quality (get data :quality 0.75)
-        image (LosslessFactory/createFromImage document (get-in data [:contents :image]))]
+        image ^PDImageXObject (LosslessFactory/createFromImage document (get-in data [:contents :image]))]
     (assert image "Image must be present in hole contents.")
     (condp = aspect-ratio
       :preserve (draw-image-preserve-aspect c-stream image data)
