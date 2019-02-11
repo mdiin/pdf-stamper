@@ -280,21 +280,22 @@
     - If `fn?` expects `number-of-pages` to be a fn accepting the current page count
       and returning the number of blank pages to prepend to the last page.
 
-  The completed document is written to the resulting
-  `java.io.ByteArrayOutputStream`, ready to be sent over the network or
-  written to a file using a `java.io.FileOutputStream`."
-  [pages context & options]
-  (let [output (java.io.ByteArrayOutputStream.)]
-    (with-open [document (PDDocument.)]
-      (let [context-with-embedded-fonts (reduce (fn [context [font style]]
-                                                  (context/embed-font document font style context))
-                                                context
-                                                (:fonts-to-embed context))
-            open-documents (doall (map #(fill-page document % context-with-embedded-fonts) pages))]
-        (.save document output)
-        (doseq [doc (flatten open-documents)]
-          (.close doc))))
-    output))
+  The completed document is written to the `out` argument, or to a
+  `java.io.ByteArrayOutputStream` if no `out` is supplied."
+  ([pages context options]
+   (apply fill-pages nil pages context options))
+  ([out pages context options]
+   (let [output (or out (java.io.ByteArrayOutputStream.))]
+     (with-open [document (PDDocument.)]
+       (let [context-with-embedded-fonts (reduce (fn [context [font style]]
+                                                   (context/embed-font document font style context))
+                                                 context
+                                                 (:fonts-to-embed context))
+             open-documents (doall (map #(fill-page document % context-with-embedded-fonts) pages))]
+         (.save document output)
+         (doseq [doc (flatten open-documents)]
+           (.close doc))))
+     output)))
 
 ;; This concludes the discussion of the primary interface to pdf-stamper. Following are the namespace documentations for the functionality
 ;; that is not directly user-facing.
