@@ -283,7 +283,7 @@
   The completed document is written to the `out` argument, or to a
   `java.io.ByteArrayOutputStream` if no `out` is supplied."
   ([pages context options]
-   (apply fill-pages nil pages context options))
+   (fill-pages nil pages context options))
   ([out pages context options]
    (let [output (or out (java.io.ByteArrayOutputStream.))]
      (with-open [document (PDDocument.)]
