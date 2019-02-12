@@ -1,0 +1,6 @@
+{:source-paths ["src"]
+ :deps {org.clojure/clojure {:mvn/version "1.9.0"}
+        org.clojure/data.xml {:mvn/version "0.0.8"}
+        org.apache.pdfbox/pdfbox {:mvn/version "2.0.11"}
+        potemkin {:mvn/version "0.4.5"}
+        prismatic/schema {:mvn/version "1.1.9"}}}
