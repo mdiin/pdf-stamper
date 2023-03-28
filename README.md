@@ -5,11 +5,11 @@ form a complete PDF.
 
 ## Stability
 
-This project is being used in production by Ingenium Golf, and has been since its inception, so it is pretty stable by now. Active development is happening mostly in branches, and only when I can find the time (or it intersects with the needs of Ingenium Golf).
+This project has been used in production for several years and I consider it pretty stable. The project is not under active development, but works well for the intended usecases.
 
 ## Usage
 
-Not much to see here yet. Library is still under active development.
+Not much to see here yet.
 
 Feeling adventurous? The library is on Clojars:
 
@@ -67,6 +67,9 @@ After that, in no particular order:
 - Control indentation of first line for parsed text
 - Add space after every line of paragraph
 - Pluggable text parser, to support other formats than XML (is this even relevant?)
+- Control the center-fold
+
+Some of this will need a rewrite of the core to isolate side-effects at the edges, and make the internal API more data-driven in general.
 
 # Acknowledgments
 
